@@ -3,7 +3,7 @@ import React from 'react';
 function AdminPage(props) {
     return (
         <div>
-            ADMIN ONLY
+            AdminPage ONLY
         </div>
     );
 }
