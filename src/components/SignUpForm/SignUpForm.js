@@ -1,13 +1,11 @@
 import React, {useState} from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import TextField from '@material-ui/core/TextField';
-import Button from '@material-ui/core/Button';
-import { FormGroup , FormControl, Typography } from '@material-ui/core';
-import Avatar from '@material-ui/core/Avatar';
+import { FormGroup , FormControl, Typography, TextField, Button, Avatar } from '@material-ui/core';
 import LockIcon from '@material-ui/icons/Lock';
 import { withRouter } from "react-router";
+import { db } from '../../config/firebaseApp'
 
-// import FolderIcon from '@material-ui/icons/Folder';
+
 
 
 const useStyles = makeStyles((theme) => ({
@@ -26,17 +24,80 @@ const useStyles = makeStyles((theme) => ({
 function SignUpForm (props) {
     const [name , setName] = useState('')
     const [cashApp , setCashApp] = useState('')
-    const [referalID , setReferalID] = useState('')
-    const [password , setPassword] = useState('')
+    const [referralCode , SetReferralCode] = useState('')
+    const [phoneNumber , setPhoneNumber] = useState('')
     
     
     const classes = useStyles();
 
-    const handleSubmit = (e)=> {
-        e.preventDefault()
 
-        props.history.push('/', 1)
+    const handleChange = e =>{
+        const inputValue = e.target.value 
+        
+        switch (e.target.name) {
+           
+            case 'name':
+                setName(inputValue)
+                break;
+
+            case 'cashApp':
+                setCashApp(inputValue)
+                break;
+
+            case 'phoneNumber':
+                setPhoneNumber(inputValue)
+                break;
+        
+            case 'referralCode':
+                SetReferralCode(inputValue)
+                break;
+
+            default:
+                break;
+        }
     }
+
+
+    const getlistNumber = async () => {
+        const snapShot = await db().collection('members').get()
+
+        const memberDocs = await snapShot.docs
+        const memberListNumbers = memberDocs.map(doc => {
+            if(!Number.isNaN(+doc.data().listNumber)){
+                return +doc.data().listNumber
+            }else{
+                return 0
+            }
+        })
+        console.log('Member NUmbers: ',memberListNumbers)
+        const memberListNumber = Math.max(...memberListNumbers) + 1
+
+        return memberListNumber
+    }
+
+
+    const handleSubmit = async (e)=> {
+        const listNumber = await getlistNumber()
+
+        await db().collection('members').add({ name, phoneNumber, cashApp, referralCode, listNumber })
+
+        const querySnapshot =  await db().collection('members').where('cashApp','==', cashApp).get()
+        const member = querySnapshot.docs[0].data()
+
+        props.history.push('/', { id: querySnapshot.docs[0].id, member} )
+    }
+
+
+    
+
+
+
+    const handleEnterSubmit = e => {
+        if(e.key === "Enter"){
+            handleSubmit()
+        } 
+    }
+
 
 
 
@@ -45,7 +106,7 @@ function SignUpForm (props) {
         <div className='signUpForm'>
 
 
-            <FormGroup style={{ width: 500, margin: '22vh auto 30px' }}>
+            <FormGroup onKeyPress={handleEnterSubmit} style={{ width: 500, margin: '22vh auto 30px' }}>
 
                 <div>
                     <Avatar color='secondary' style={{margin: '0 auto 30px'}}>
@@ -56,19 +117,19 @@ function SignUpForm (props) {
                 </div>
                 
                 <FormControl style={{marginBottom: 25}}>
-                    <TextField  helperText="" id="outlined-basic" label="Name" variant="outlined" />
+                    <TextField name='name' onChange={handleChange} helperText="" id="outlined-basic" label="Name" variant="outlined" />
                 </FormControl>
 
                 <FormControl style={{marginBottom: 25}}>
-                    <TextField  helperText="" id="outlined-basic" label="Cash App" variant="outlined" />
+                    <TextField name='cashApp' onChange={handleChange} helperText="" id="outlined-basic" label="Cash App" variant="outlined" />
                 </FormControl>
 
                 <FormControl style={{marginBottom: 25}}>
-                    <TextField  helperText="" id="outlined-basic" label="Referral Code" variant="outlined" />
+                    <TextField name="referralCode" onChange={handleChange} helperText="" id="outlined-basic" label="Referral Code" variant="outlined" />
                 </FormControl>
 
                 <FormControl style={{marginBottom: 25}}>
-                    <TextField  helperText="" id="outlined-basic" label="Phone" variant="outlined" />
+                    <TextField type="tel" name="phoneNumber" onChange={handleChange} helperText="" id="outlined-basic" label="Mobile Number" variant="outlined" />
                 </FormControl>
                 
                 <Button variant="contained" color="primary" onClick={handleSubmit}>Submit</Button>
