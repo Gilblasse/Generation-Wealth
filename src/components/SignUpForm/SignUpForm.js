@@ -76,15 +76,33 @@ function SignUpForm (props) {
     }
 
 
+    const getMemberLevel = async () => {
+        const snapShot = await db().collection('members').doc(referralCode).get()
+        const referredBy = snapShot.data()
+        if(referredBy){
+            const level = referredBy.level ? referredBy.level : 'Level 1'
+            return level
+            
+        }else{
+            alert('Please Check The Referral Code')
+        }
+        
+    }
+
+
     const handleSubmit = async (e)=> {
+        const memberLevel = await getMemberLevel()
         const listNumber = await getlistNumber()
 
-        await db().collection('members').add({ name, phoneNumber, cashApp, referralCode, listNumber })
+        if (memberLevel){
+            await db().collection('members').add({ name, phoneNumber, cashApp, referralCode, listNumber, memberLevel })
+    
+            const querySnapshot =  await db().collection('members').where('cashApp','==', cashApp).get()
+            const member = querySnapshot.docs[0].data()
+    
+            props.history.push('/', { id: querySnapshot.docs[0].id, member} )
+        }
 
-        const querySnapshot =  await db().collection('members').where('cashApp','==', cashApp).get()
-        const member = querySnapshot.docs[0].data()
-
-        props.history.push('/', { id: querySnapshot.docs[0].id, member} )
     }
 
 

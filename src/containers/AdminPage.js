@@ -1,23 +1,26 @@
-import React from 'react';
+import React, {useState, useEffect} from 'react';
+import MemeberRow from '../components/MemeberRow/MemeberRow'
 import { db } from '../config/firebaseApp'
 
 
-const members = db().collection('members').onSnapshot()
 
 
 function AdminPage(props) {
+    const [members, setMembers] = useState([]) 
 
 
     const getMembers = async ()=>{
-        const membersDB = await db().collection('members')
-        const membersDocs = await membersDB.onSnapshot( snapShot => {
-            let changes = snapShot.docChanges()
-            changes.forEach(change => {
-                console.log(change.doc.data())
-            })
-        })
+        const snapshot = await db().collection('members').get()
+        const membersDocs = snapshot.docs
+        const membersInfo = membersDocs.map(doc => doc.data()) 
+        const membersData = membersInfo.filter(member => +member.listNumber !== 0 )
+
+        setMembers(membersData)
     }
 
+    useEffect(() => {
+        getMembers()
+    },[])
 
     return (
         <div>
@@ -25,11 +28,21 @@ function AdminPage(props) {
 
 
             <h1>GW Members</h1>
+
+            Find Member: <input type="text"/>
+            <select name="" id="">
+                <option value="">All</option>
+                <option value="">Level 1</option>
+                <option value="">Level 2</option>
+                <option value="">Level 3</option>
+                <option value="">Level 4</option>
+            </select>
+
             <ul>
                 {
-                    getMembers.map(memberInfo => {
+                    members.map(member => {
                         return (
-                            <li> {memberInfo.name} </li>
+                            <MemeberRow member={member}/>
                         )
                     })
                 }

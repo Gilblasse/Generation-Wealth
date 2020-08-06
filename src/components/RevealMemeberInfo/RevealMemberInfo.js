@@ -12,20 +12,6 @@ const useStyles = makeStyles({
   },
 });
 
-function createData(name, calories, fat, carbs, protein) {
-  return { name, calories, fat, carbs, protein };
-}
-
-const rows = [
-  createData('Frozen yoghurt', 159, 6.0, 24, 4.0),
-  createData('Ice cream sandwich', 237, 9.0, 37, 4.3),
-  createData('Eclair', 262, 16.0, 24, 6.0),
-  createData('Cupcake', 305, 3.7, 67, 4.3),
-  createData('Gingerbread', 356, 16.0, 49, 3.9),
-];
-
-
-
 
 
 function RevealMemberInfo(props) {
@@ -41,7 +27,7 @@ function RevealMemberInfo(props) {
                     
                   <div style={{marginTop: '20vh'}}>
 
-                    <div>Your List Number is:  <h2>{data.member.listNumber}</h2></div>
+                    <div>Your Number In Line is:  <h2>{data.member.listNumber}</h2></div>
                                         
                     <div style={{width: 700, margin: '30px auto'}}>
                       <TableContainer component={Paper}>
@@ -49,7 +35,7 @@ function RevealMemberInfo(props) {
                           <TableHead>
                             <TableRow>
                               <TableCell>Member Name</TableCell>
-                              <TableCell align="right">List Number </TableCell>
+                              <TableCell align="right">Membership Level </TableCell>
                               <TableCell align="right">Referral Code</TableCell>
                             </TableRow>
                           </TableHead>
@@ -57,7 +43,7 @@ function RevealMemberInfo(props) {
 
                               <TableRow key={data.id}>
                                 <TableCell component="th" scope="row">{data.member.name}</TableCell>
-                                <TableCell align="right">{data.member.listNumber}</TableCell>
+                                <TableCell align="right">{data.member.memberLevel}</TableCell>
                                 <TableCell align="right">{data.id}</TableCell>
                               </TableRow>
 
