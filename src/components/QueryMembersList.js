@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import MemeberRow from '../components/MemberRow/MemeberRow'
 import ReactLoading from 'react-loading';
 import { Modal} from '@material-ui/core';
-import {db} from '../config/firebaseApp';
+// import {db} from '../config/firebaseApp';
 
 function QueryMembersList({queryMembers, allMembers, selectedLvlMembers, updateMember}) {
     const [expanded, setExpanded] = useState(false);
@@ -29,21 +29,21 @@ function QueryMembersList({queryMembers, allMembers, selectedLvlMembers, updateM
     const handleChange = (panel) => (event, isExpanded) => {
         setExpanded(isExpanded ? panel : false);
     }
-
+    
     const createNewEntry = ()=> {
-        const {level, user } = targetMember
+        const {level, user, name,phoneNumber,cashApp,referralCode,memberShipID } = targetMember
         const {listNumber} = skipMember
         const userMembership = { level, listNumber, user, adminFee: false, cashOut: false, investment: false }
-        // console.log('New Entry: ', userMembership)
-        db().collection('memberships').add(userMembership)
-        updateMember()
+        const remainingMemberInfo = {name,phoneNumber,cashApp,referralCode,memberShipID }
+
+        updateMember({ type: 'ADD NEW ENTRY' , payload: {newEntry: userMembership, userInfo: remainingMemberInfo} })
         goToBottom(1)
     }
 
 
     const switchMember = ()=>{
         const updatedListNum = { listNumber: skipMember.listNumber }
-        db().collection('memberships').doc(targetMember.memberShipID).update(updatedListNum)
+        updateMember({ type: 'UPDATE ENTRY' , payload: {updating: updatedListNum, id: targetMember.memberShipID} })
         goToBottom(2)
     }
 
@@ -51,7 +51,7 @@ function QueryMembersList({queryMembers, allMembers, selectedLvlMembers, updateM
     const goToBottom = (num) => {
         const lastAvailablePostion = associatedMembers.length + 1 + num
         const updatedListNum = { listNumber:  lastAvailablePostion}
-        db().collection('memberships').doc(skipMember.memberShipID).update(updatedListNum)
+        updateMember({ type: 'UPDATE ENTRY' , payload: {updating: updatedListNum, id: skipMember.memberShipID} })
     }
 
 
@@ -70,15 +70,14 @@ function QueryMembersList({queryMembers, allMembers, selectedLvlMembers, updateM
     }
 
 
+    
+
     const sortedAllMembers = ()=> allMembers.sort((a,b) =>  (+a.listNumber < +b.listNumber) ? -1 : (+a.listNumber > +b.listNumber) ? 1 : 0 )
 
 
     useEffect(() => {
         setMembers(queryMembers)
     }, [queryMembers])
-    
-     
-
 
     
 
@@ -90,7 +89,8 @@ function QueryMembersList({queryMembers, allMembers, selectedLvlMembers, updateM
                 members.length == 0 
                 ? 
                     <div>
-                        <ReactLoading type='spinningBubbles' color='#e7ddff' height={'20%'} width={'20%'} />
+                        {/* <ReactLoading type='spin' color='#e7ddff' height={'20%'} width={'20%'} /> */}
+                        Search Not Found: 
                     </div> 
                 : (
                     <div>

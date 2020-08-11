@@ -55,6 +55,9 @@ function AdminPage(props) {
         handleFilters()
     }, [inputFilter,  dropDownVal])
 
+    useEffect(() =>{
+        selectedLvlMembers()
+    },[members])
    
 
     // ADMIN LOG OUT SECTION
@@ -70,25 +73,25 @@ function AdminPage(props) {
         let copyofMembers = [...members] 
         let memberResults;
 
-        if(isNumber(inputFilter)){
-            memberResults = copyofMembers.filter(member => +member.listNumber === +inputFilter)
-
-        }else if(inputFilter != '') {
-            const query = inputFilter.toUpperCase()
-            const byName = copyofMembers.filter(member => member.name.toUpperCase().indexOf(query) > -1 )
-            const byCashApp = copyofMembers.filter(member => member.cashApp.toUpperCase().indexOf(query) > -1 )
-            const byPhone = copyofMembers.filter(member => member.phoneNumber.toUpperCase().indexOf(query) > -1 )
-            const membersQuerys = [...byName,...byCashApp,...byPhone] 
-            const membersQueryResults = {};
-
-            memberResults = membersQuerys.filter(member => !membersQueryResults[member['memberShipID']] && (membersQueryResults[member['memberShipID']] = true) )
-
+        if(inputFilter != ''){
+            if(isNumber(inputFilter)){
+                memberResults = copyofMembers.filter(member => +member.listNumber === +inputFilter)
+    
+            }else{
+                const query = inputFilter.toUpperCase()
+                const byName = copyofMembers.filter(member => member.name.toUpperCase().indexOf(query) > -1 )
+                const byCashApp = copyofMembers.filter(member => member.cashApp.toUpperCase().indexOf(query) > -1 )
+                const byPhone = copyofMembers.filter(member => member.phoneNumber.toUpperCase().indexOf(query) > -1 )
+                const membersQuerys = [...byName,...byCashApp,...byPhone] 
+                const membersQueryResults = {};
+    
+                memberResults = membersQuerys.filter(member => !membersQueryResults[member['memberShipID']] && (membersQueryResults[member['memberShipID']] = true) )
+            }
         }else{
-            memberResults = copyofMembers
+            memberResults = [...members]
         }
 
         const filteredMembers = selectedLvlMembers(memberResults)
-        console.log('==================   SETTING QUERY MEMBERS ======================')
         setQueryMembers(filteredMembers)
     }
 
@@ -103,8 +106,10 @@ function AdminPage(props) {
     }
 
 
-    const findEntry = id => {
-        
+
+
+    const addedNewEntry = async (entry) => {
+        await db().collection('memberships').add(entry)
     }
 
 
@@ -155,11 +160,11 @@ function AdminPage(props) {
                 updateMembersInfo(payload.id, updateData)
             break;
 
-
+    
             case 'ADD NEW ENTRY':
-                
+               updatedQueryArr = [...members, {...payload.newEntry, ...payload.userInfo}]
                 // db Actions
-                db().collection('memberships').add(payload.userMembership)
+                addedNewEntry(payload.newEntry)
             break
         
             default:
@@ -170,6 +175,9 @@ function AdminPage(props) {
     }
 
 
+
+
+    
 
     return (
         <div style={{width: 750, margin: '25px auto 0'}}>
