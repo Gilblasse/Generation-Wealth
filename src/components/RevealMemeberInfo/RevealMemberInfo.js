@@ -15,7 +15,7 @@ const useStyles = makeStyles({
 
 
 function RevealMemberInfo(props) {
-  const data = props.history.location.state
+  const { id, user } = props.history.location.state
   const classes = useStyles();
 
 
@@ -26,25 +26,27 @@ function RevealMemberInfo(props) {
                 !props.history.location.state ?  <Redirect to='/signup'/> : (
                     
                   <div style={{marginTop: '20vh'}}>
-
-                    <div>Your Number In Line is:  <h2>{data.member.listNumber}</h2></div>
+                    <h1 style={{textAlign: 'center', color:'green'}}>Success!</h1>
+                    <div style={{textAlign: 'center'}}>Your Number In Line is:  <h2>{user.listNumber}</h2></div>
                                         
+                    <hr style={{width: 500}} />
+
                     <div style={{width: 700, margin: '30px auto'}}>
                       <TableContainer component={Paper}>
                         <Table className={classes.table} aria-label="simple table">
                           <TableHead>
                             <TableRow>
-                              <TableCell>Member Name</TableCell>
-                              <TableCell align="right">Membership Level </TableCell>
-                              <TableCell align="right">Referral Code</TableCell>
+                              <TableCell>Your Name</TableCell>
+                              <TableCell align="right">Your Membership Level </TableCell>
+                              <TableCell align="right">My Referral Code</TableCell>
                             </TableRow>
                           </TableHead>
                           <TableBody>
 
-                              <TableRow key={data.id}>
-                                <TableCell component="th" scope="row">{data.member.name}</TableCell>
-                                <TableCell align="right">{data.member.memberLevel}</TableCell>
-                                <TableCell align="right">{data.id}</TableCell>
+                              <TableRow key={id}>
+                                <TableCell component="th" scope="row">{user.name}</TableCell>
+                                <TableCell align="right">{user.level}</TableCell>
+                                <TableCell align="center">{id}</TableCell>
                               </TableRow>
 
                           </TableBody>

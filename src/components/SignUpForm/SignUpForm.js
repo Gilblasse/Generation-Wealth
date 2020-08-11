@@ -4,7 +4,7 @@ import { FormGroup , FormControl, Typography, TextField, Button, Avatar } from '
 import LockIcon from '@material-ui/icons/Lock';
 import { withRouter } from "react-router";
 import { db } from '../../config/firebaseApp'
-
+import FooterCaption from '../FooterCaption'
 
 
 
@@ -26,6 +26,10 @@ function SignUpForm (props) {
     const [cashApp , setCashApp] = useState('')
     const [referralCode , SetReferralCode] = useState('')
     const [phoneNumber , setPhoneNumber] = useState('')
+
+    const [adminFee , setAdminFee] = useState(false)
+    const [cashOut , setCashOut] = useState(false)
+    const [investment , setInvestment] = useState(false)
     
     
     const classes = useStyles();
@@ -58,29 +62,27 @@ function SignUpForm (props) {
     }
 
 
+
+
     const getlistNumber = async () => {
-        const snapShot = await db().collection('members').get()
+        const memberships = await db().collection('memberships').get();
+        const listNums = memberships.docs.map(member => +member.data().listNumber )
+        const maxListNums = Math.max(...listNums)
+        const listNum = maxListNums + 1
 
-        const memberDocs = await snapShot.docs
-        const memberListNumbers = memberDocs.map(doc => {
-            if(!Number.isNaN(+doc.data().listNumber)){
-                return +doc.data().listNumber
-            }else{
-                return 0
-            }
-        })
-        console.log('Member NUmbers: ',memberListNumbers)
-        const memberListNumber = Math.max(...memberListNumbers) + 1
-
-        return memberListNumber
+        return listNum
     }
 
 
     const getMemberLevel = async () => {
-        const snapShot = await db().collection('members').doc(referralCode).get()
-        const referredBy = snapShot.data()
-        if(referredBy){
-            const level = referredBy.level ? referredBy.level : 'Level 1'
+        const refereredBy = await db().collection('memberships').where('user', '==', referralCode).get()
+        const referrRef = refereredBy.docChanges()[0]
+        const referrMemebershipID = referrRef ? referrRef.doc.id : referrRef
+
+        if(referrMemebershipID){
+            const referrMemebershipLevel = refereredBy.docChanges()[0].doc.data().level
+            const level = referrMemebershipLevel ? referrMemebershipLevel : 1
+
             return level
             
         }else{
@@ -89,20 +91,36 @@ function SignUpForm (props) {
         
     }
 
+    const isUserInDB = async ()=> {
+        const user = await db().collection('users').where('cashApp','==', cashApp).get()
+        return user.docs.length == 0 ? false : true
+    }
+
 
     const handleSubmit = async (e)=> {
-        const memberLevel = await getMemberLevel()
-        const listNumber = await getlistNumber()
+        const checkUserInDB = await isUserInDB()
 
-        if (memberLevel){
-            await db().collection('members').add({ name, phoneNumber, cashApp, referralCode, listNumber, memberLevel })
+        if(!checkUserInDB){
+            const startingLevel = await getMemberLevel()
+            
+            if (startingLevel){
+                const listNumber = await getlistNumber()
+                const newUser = await db().collection('users').add({ name, phoneNumber, cashApp, referralCode })
+                const newUserInfo = await newUser.get()
+            
+                const userID = newUser.id
+                const userMembership = { level: startingLevel, listNumber, adminFee, cashOut, investment, user: userID, active: true, skipCount: 0}
     
-            const querySnapshot =  await db().collection('members').where('cashApp','==', cashApp).get()
-            const member = querySnapshot.docs[0].data()
+                const userInfo =  {...newUserInfo.data(), ...userMembership}
+            
+                await db().collection('memberships').add(userMembership)
     
-            props.history.push('/', { id: querySnapshot.docs[0].id, member} )
+                props.history.push('/thank-you', { id: userID, user: userInfo} )
+            }
+        }else {
+            alert("You've Already Registered. Please check your text message Or contact a Generation Wealth Administrator")
         }
-
+        
     }
 
 
@@ -131,7 +149,7 @@ function SignUpForm (props) {
                         <LockIcon />
                     </Avatar>
 
-                    <Typography style={{marginBottom: 25}} varient='h3' color="textSecondary"> MemberShip Sign Up </Typography>
+                    <Typography style={{marginBottom: 25, textAlign: 'center'}} varient='h3' color="textSecondary"> MemberShip Sign Up </Typography>
                 </div>
                 
                 <FormControl style={{marginBottom: 25}}>
@@ -155,9 +173,7 @@ function SignUpForm (props) {
             </FormGroup>
 
 
-            <div>
-                <Typography varient='body2' color="textSecondary"> Copyright © Generational Wealth 2020. </Typography>
-            </div>
+            <FooterCaption/>
 
         </div>
     );

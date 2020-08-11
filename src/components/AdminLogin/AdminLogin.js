@@ -3,6 +3,7 @@ import { FormGroup , FormControl, Typography, TextField, Button, Avatar } from '
 import LockIcon from '@material-ui/icons/Lock';
 import { auth } from '../../config/firebaseApp'
 import { withRouter } from 'react-router'
+import FooterCaption from '../FooterCaption';
 
 
 
@@ -15,7 +16,7 @@ function AdminLogin({ history }) {
 
     const handleInputChange = e =>{
         const inputValue = e.target.value
-        e.target.name == 'email' ? setEmail(inputValue) : setPassword(inputValue)
+        e.target.name === 'email' ? setEmail(inputValue) : setPassword(inputValue)
     } 
 
 
@@ -54,7 +55,7 @@ function AdminLogin({ history }) {
                         <LockIcon />
                     </Avatar>
                     
-                    <Typography variant="h4" component="h4" color="textSecondary" gutterBottom > GW Admin Login</Typography>
+                    <Typography variant="h4" style={{textAlign: 'center'}} component="h4" color="textSecondary" gutterBottom > GW Admin Login</Typography>
                 </div>
 
                 
@@ -72,9 +73,7 @@ function AdminLogin({ history }) {
             </FormGroup>
 
 
-            <div>
-                <Typography varient='body2' color="textSecondary"> Copyright © Generational Wealth 2020. </Typography>
-            </div>
+            <FooterCaption/>
 
         </div>
     );
