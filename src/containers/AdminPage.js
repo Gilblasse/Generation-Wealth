@@ -21,39 +21,56 @@ function AdminPage(props) {
 
 
 
-    useEffect(() => {
-        const unsubscribe = db().collection('memberships').onSnapshot(async (snapShot) =>{
-            const membersArr = []
-            const dict = {}
 
-            for(const membershipDoc of snapShot.docs){
-                const membershipData = membershipDoc.data()
-                const userDoc = await db().collection('users').doc(membershipData.user).get()
-                const user = userDoc.data()
-                const memberInfo = {...membershipData, memberShipID: membershipDoc.id, ...user}
+    // INSTEAD OF ONSNAPSHOT USE GET     
+    // 
+    // THIS WOULD MAKE THINGS EVEN FASTER SINCE YOU ARE ALREADY CONTROLLING ALL THE MEMBERSHIP OBJECTS WITH JAVASCRIPT
+    // useEffect(() => {
+    //     const unsubscribe = db().collection('memberships').onSnapshot(async (snapShot) =>{
+    //         const membersArr = []
+    //         // console.log('SnapShot Changes: ', snapShot.docChanges())
+    //         for(const membershipDoc of snapShot.docs){
+    //             const membershipData = membershipDoc.data()
+    //             const userDoc = await db().collection('users').doc(membershipData.user).get()
+    //             const user = userDoc.data()
+    //             const memberInfo = {...membershipData, memberShipID: membershipDoc.id, ...user}
                 
-                membersArr.push(memberInfo)
-            }
+    //             membersArr.push(memberInfo)
+    //         }
+            
+    //         // const membersObjects = membersArr.filter(memberObj => +memberObj.listNumber !== 0 )
 
-            const membersObjects = membersArr.filter(memberObj => +memberObj.listNumber !== 0 )
+ 
+    //         setMembers(membersArr)
+    //         console.log('PULLING FROM DB ON CHANGE')
+    //     })
 
-            for(const mem of membersObjects){
-                dict[mem.memberShipID] = mem
-            }
+    //     return unsubscribe
+    // },[])
 
-            setLookUpMembers(dict)
-            setMembers(membersObjects)
-            console.log('PULLING FROM DB ON CHANGE')
-        })
 
-        return unsubscribe
+    useEffect(()=>{
+        getAllEntries()
     },[])
 
+    const getAllEntries = async ()=>{
+        const membersArr = []
+        const membershipRef = await db().collection('memberships').get()
 
-    // UsEffect Depending On InputFilter | Members | DropDownVal
-    useEffect(() => {
-        handleFilters()
-    }, [inputFilter,  dropDownVal])
+        for(const membershipDoc of membershipRef.docs){
+            const membershipData = membershipDoc.data()
+            const userDoc = await db().collection('users').doc(membershipData.user).get()
+            const user = userDoc.data()
+            const memberInfo = {...membershipData, memberShipID: membershipDoc.id, ...user}
+            
+            membersArr.push(memberInfo)
+        }
+        
+        console.log('ALL MEMBERS FROM DB: ', membersArr)
+        setMembers(membersArr)
+    }
+
+  
 
     useEffect(() =>{
         selectedLvlMembers()
@@ -68,8 +85,7 @@ function AdminPage(props) {
 
 
     // FILTERS SECTION
-
-    const handleFilters = () => {
+    const handleFilters = (queryDropDownVal) => {
         let copyofMembers = [...members] 
         let memberResults;
 
@@ -91,14 +107,16 @@ function AdminPage(props) {
             memberResults = [...members]
         }
 
-        const filteredMembers = selectedLvlMembers(memberResults)
-        setQueryMembers(filteredMembers)
+        const filteredMembers = selectedLvlMembers(memberResults, queryDropDownVal)
+
+        return filteredMembers
     }
 
 
-    const selectedLvlMembers = (mem=false) => {
+    const selectedLvlMembers = (mem=false, selectedLVL=false) => {
         const selectedMembers = mem || members
-        const associatedMembers = selectedMembers.filter(mem => +mem.level == +selectLevelRef.current.value )
+        const dropDwnLVLval = selectedLVL || +selectLevelRef.current?.value
+        const associatedMembers = isNaN(selectedLVL) ? selectedMembers : selectedMembers.filter(mem => +mem.level == dropDwnLVLval )
         const activeMembers = associatedMembers.filter(mem => mem.active === true)
         const sortedMembers = ()=> activeMembers.sort((a,b) =>  (+a.listNumber < +b.listNumber) ? -1 : (+a.listNumber > +b.listNumber) ? 1 : 0 )
 
@@ -107,11 +125,9 @@ function AdminPage(props) {
 
 
 
-
     const addedNewEntry = async (entry) => {
         await db().collection('memberships').add(entry)
     }
-
 
     const updateMembersInfo = async (id, data) => {
         await db().collection('memberships').doc(id).update(data)
@@ -130,17 +146,35 @@ function AdminPage(props) {
 
         switch (type) {
             case 'CASHINGOUT':
-                const {deactivateMemeber, newEntryCurrentLVL, newLvlListNum, remainingMemberInfo} = payload
-                const remaining = members.filter(mem => mem.memberShipID != deactivateMemeber.id)
-                const bottomOfListLVLs = [...remaining, {...newEntryCurrentLVL, ...remainingMemberInfo}, {...newLvlListNum, ...remainingMemberInfo} ]
-                 
-                updatedQueryArr = [...bottomOfListLVLs]
-                // DB Actions
-                cashingOutDB(deactivateMemeber.id,newEntryCurrentLVL,newLvlListNum)
+                let updatedMems = []
+                let cashingOutDBarr = []
+                
+                const reaminingMembers = members.filter(mem => {
+                    for(const cashOutMember in payload){
+                        debugger
+                        if(mem.memberShipID != cashOutMember.deactivateMemeber.id){
+                            return false
+                        }
+                        return true
+                    }
+                })  
+                debugger
+                payload.forEach( memberUpdate => {
+                    const {deactivateMemeber, newEntryCurrentLVL, newLvlListNum, remainingMemberInfo} = memberUpdate
+                    const bottomOfListLVLs = [{...newEntryCurrentLVL, ...remainingMemberInfo}, {...newLvlListNum, ...remainingMemberInfo} ]
+                    
+                    updatedMems.push(...bottomOfListLVLs)
+                    // DB Actions
+                    cashingOutDBarr.push({deactivateMemeber: deactivateMemeber.id, newEntryCurrentLVL, newLvlListNum})
+                    // cashingOutDB(deactivateMemeber.id,newEntryCurrentLVL,newLvlListNum)
+                })
+
+                debugger
             break;
             
 
-            case 'UPDATE ENTRY':        
+            case 'UPDATE ENTRY':  
+                // debugger      
                 let currentMEM = {}
                 const updatedMembers = members.map(mem => {
                     if(mem.memberShipID === payload.id){
@@ -153,11 +187,14 @@ function AdminPage(props) {
                 let {active, adminFee, cashOut, investment, level, listNumber, skipCount} = currentMEM
                 skipCount = skipCount || 0
                 const updateData = {active, adminFee, cashOut, investment, level, listNumber, skipCount}
-
+                // debugger
                 updatedQueryArr = [...updatedMembers]
 
                 // db Actions
-                updateMembersInfo(payload.id, updateData)
+                if(payload.userEdit){
+                    // debugger
+                    updateMembersInfo(payload.id, updateData)
+                } 
             break;
 
     
@@ -188,7 +225,6 @@ function AdminPage(props) {
 
 
             <div>
-                Find Member: <input type="text" value={inputFilter} onChange={e => setInputFilter(e.target.value)}/>
                 <select onChange={(e)=> setDropDownVal(e.target.value)} ref={selectLevelRef} name="levels" >
                     {/* <option value="all">All</option> */}
                     <option value="1">Level 1</option>
@@ -202,12 +238,15 @@ function AdminPage(props) {
 
                 <QueryMembersList 
                     allMembers={members}  
-                    queryMembers={queryMembers} 
-                    selectedLvlMembers={selectedLvlMembers()} 
+                    handleFilters={handleFilters}
+                    inputFilter={inputFilter}
+                    dropDownVal={dropDownVal}
+                    setInputFilter={setInputFilter}
+                    // queryMembers={queryMembers} 
+                    // selectedLvlMembers={selectedLvlMembers()} 
                     updateMember={(memberAction) => updateMember(memberAction)} 
                 />
             </div>
-
 
 
 

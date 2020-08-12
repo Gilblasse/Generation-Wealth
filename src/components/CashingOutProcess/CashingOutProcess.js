@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {Grid, List, ListItem, ListItemIcon, ListItemText} from '@material-ui/core'
 import { db } from '../../config/firebaseApp';
+import CashingOutList from './CashingOutList';
 
 
 function CashingOutProcess({selectedLvlMembers, allMembers, updateMember}) {
@@ -12,12 +13,14 @@ function CashingOutProcess({selectedLvlMembers, allMembers, updateMember}) {
     const [findInvestors, setfindInvestors] = useState({})
     const [isCashingOut, setIsCashingOut] = useState(false)
     const [isSendingNotifications, setIsSendingNotifications] = useState(false)
+    // const [editCheckBoxes , setEditCheckBoxes ] = useState(false)
+    // const adminRef = useRef()
     // const [adminFee, setAdminFee] = useState()
     // const [investment, setInvestment] = useState()
     // const [cashOut, setCashOut] = useState()
 
     useEffect(() => {
-        setSelectedIndex(0)
+        // setSelectedIndex(0)
         setInvestors( findInvestors[selectedLvlMembers()[0]?.memberShipID] )
     },[findInvestors])
 
@@ -40,8 +43,6 @@ function CashingOutProcess({selectedLvlMembers, allMembers, updateMember}) {
             const lvlListNums = presentMembers.map(mem => +mem.listNumber)
             const maxListNum = Math.max(...lvlListNums) + 1
 
-
-            console.table({return: 'RETURNING ',lvl, maxListNum})
             return maxListNum
        }
        
@@ -87,7 +88,8 @@ function CashingOutProcess({selectedLvlMembers, allMembers, updateMember}) {
 
     const handleCashOutProcess = async() => {
         const cashingOut = selectedLvlMembers().slice(0,numOfCashOuts)
-        
+        const cashoutUpdates = []
+
         for(let cashingOutmember of cashingOut) {
             const { memberShipID, adminFee, investment, cashOut, listNumber, level, user, name,phoneNumber, cashApp, referralCode} = cashingOutmember
             const associatedInvestors = findInvestors[memberShipID]
@@ -131,29 +133,24 @@ function CashingOutProcess({selectedLvlMembers, allMembers, updateMember}) {
                             break;
                     }
 
-                    updateMember( { type: 'CASHINGOUT', payload: {newEntryCurrentLVL, deactivateMemeber, newLvlListNum, remainingMemberInfo} } )
+                    cashoutUpdates.push({newEntryCurrentLVL, deactivateMemeber, newLvlListNum, remainingMemberInfo})
 
                 }else{
-                    alert(`Entry:  ${cashingOutmember.listNumber}. ${cashingOutmember.name} is Missing Either Admin Fee | Investment | Checkout`)
+                    // alert(`Entry:  ${cashingOutmember.listNumber}. ${cashingOutmember.name} is Missing Either Admin Fee | Investment | Checkout`)
                 }
             }else{
                 alert(`Entry:  ${cashingOutmember.listNumber}. ${cashingOutmember.name} Needs more Members In Order to Cash Out`)
             }
-        }
 
+            // debugger 
+        }
+        // debugger
+        cashoutUpdates.length != 0 && updateMember( { type: 'CASHINGOUT', payload: cashoutUpdates } )
         setIsCashingOut(false)
     }
 
 
-    const handleCheck = (e,id) => {
 
-        updateMember({ 
-            type:'UPDATE ENTRY', 
-            payload: { 
-                updating: {[e.target.name]: e.target.checked}, id
-            } 
-        })
-    }
 
 
 
@@ -200,28 +197,7 @@ function CashingOutProcess({selectedLvlMembers, allMembers, updateMember}) {
                             selectedLvlMembers().slice(0,numOfCashOuts).map((mem,i) => {
                                 return (
                                 
-                                    <ListItem button selected={selectedIndex === i} onClick={(event) => handleListItemClick(event, i, mem.memberShipID)}>
-                                        <ListItemIcon>
-                                            {mem.listNumber}.
-                                        </ListItemIcon>
-
-                                        <ListItemText primary={mem.name} />
-
-
-                                        {/* CHECK BOXES */}
-                                        <ListItemIcon>
-                                            <input type="checkbox" name='adminFee' checked={mem.adminFee ? true :  false} onChange={ e => handleCheck(e, mem.memberShipID)}/>
-                                        </ListItemIcon>
-
-                                        <ListItemIcon>
-                                            <input type="checkbox" name='investment' checked={mem.investment ? true :  false} onChange={e => handleCheck(e, mem.memberShipID)}/>
-                                        </ListItemIcon>
-
-                                        <ListItemIcon>
-                                            <input type="checkbox" name='cashOut' checked={mem.cashOut ? true :  false} onChange={e => handleCheck(e, mem.memberShipID)}/>
-                                        </ListItemIcon>
-                                    </ListItem>
-
+                                    <CashingOutList mem={mem} selectedIndex={selectedIndex} handleListItemClick={handleListItemClick} i={i} updateMember={updateMember}/>
                                 
                                 )
                             })
@@ -234,7 +210,7 @@ function CashingOutProcess({selectedLvlMembers, allMembers, updateMember}) {
                 
                 <Grid item style={{border: '1px solid black'}}>
                 <h5>PAYING CASHING OUT MEMBERS</h5>
-                    <List component="nav" style={{overflow: 'scroll', height: 200}}>
+                    <List component="nav" style={{overflow: 'scroll', height: 200}} dense>
                         {   
                             selectedLvlMembers().length != 0 && (
                                 (

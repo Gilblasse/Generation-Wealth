@@ -39,15 +39,15 @@ const useStyles = makeStyles((theme) => ({
 
 
 
-  const MemeberRow = ({member, i, expanded, setExpanded, handleChange, allMembers, handleModalOpen, handleModalClose}) => {
+  const MemeberRow = ({member, i, expanded, setExpanded, handleChange, allMembers, handleModalOpen, handleModalClose, updateMember}) => {
 
     // const [expanded, setExpanded] = useState(false);
     const [editUser, setEditUser] = useState(false)
     const [btnType, setBtnType] = useState('Edit')
     const [listNumber, setListNumber] = useState(member.listNumber)
-    // const [adminFee, setAdminFee] = useState(member.adminFee)
-    // const [investment, setInvestment] = useState(member.investment)
-    // const [cashOut, setCashOut] = useState(member.cashOut)
+    const [adminFee, setAdminFee] = useState(member.adminFee)
+    const [investment, setInvestment] = useState(member.investment)
+    const [cashOut, setCashOut] = useState(member.cashOut)
     const [level, setLevel] = useState(member.level)
     const [skipCount, setSkipCount] = useState(member.skipCount)
     const [availableListNums, setAvailableListNums ] = useState([])
@@ -57,23 +57,24 @@ const useStyles = makeStyles((theme) => ({
     
 
     useEffect(() => {
-        findAvaliableListNums()
-        // setAdminFee(member.adminFee)
-        // setInvestment(member.investment)
-        // setCashOut(member.cashOut)
+        // findAvaliableListNums()
+        setAdminFee(member.adminFee)
+        setInvestment(member.investment)
+        setCashOut(member.cashOut)
+        setSkipCount(member.skipCount)
     }, [])
 
     useEffect(() => {
         if(editUser){
             console.log('Finding List nums for LvL: ', level)
-            setListNumber('')
+            // setListNumber('')
             findAvaliableListNums()
         }
     }, [level,editUser])
 
     useEffect(() => {
         if(!editUser){
-            completedEdit()
+            // completedEdit(false)
         }
     }, [listNumber])
 
@@ -94,7 +95,7 @@ const useStyles = makeStyles((theme) => ({
                 }
             }
 
-            availableNums = [...availableListNumbers]
+            availableNums = level == member.level ? [member.listNumber, ...availableListNumbers] : [...availableListNumbers]
         }else{
             availableNums = []
         }
@@ -106,31 +107,32 @@ const useStyles = makeStyles((theme) => ({
     const handleInputChange = (e)=> {
         const feilds = {
             listNumber: {setFunc: setListNumber, value: e.target.value},
-            // adminFee: {setFunc: setAdminFee, value: e.target.checked},
-            // investment: {setFunc: setInvestment, value: e.target.checked},
-            // cashOut: {setFunc: setCashOut, value: e.target.checked},
+            adminFee: {setFunc: setAdminFee, value: e.target.checked},
+            investment: {setFunc: setInvestment, value: e.target.checked},
+            cashOut: {setFunc: setCashOut, value: e.target.checked},
             level: {setFunc: setLevel, value: e.target.value}
         }
 
         const setFunction = feilds[e.target.name]['setFunc']
         const value = feilds[e.target.name]['value']
 
-        console.log('UPDATING LEVEL: ',member.level, ' To LVL: ',e.target.value)
+        console.log('SET ADMIN FEE: ',e.target.name, ' To => ',e.target.checked)
         setFunction(value)
     }
 
 
 
-
-    const completedEdit = ()=>{
-        if(listNumber != ''){
-            const membershipFeilds = { listNumber: +listNumber,  level }
+    const completedEdit = (done)=>{
+        // debugger
+        if(listNumber != '' && adminFee != undefined){
+            const membershipFeilds = { listNumber: +listNumber,  level, adminFee, investment, cashOut}
+            // debugger
+            updateMember( { type: 'UPDATE ENTRY', payload: {id: member.memberShipID, updating: membershipFeilds, userEdit: done} } )
             setExpanded(false)
-            db().collection('memberships').doc(member.memberShipID).update(membershipFeilds)
-            
         }else{
             setListNumber(member.listNumber)
             setLevel(member.level)
+            // setAdminFee(member.adminFee)
             // alert('Error: List Number Should Not Be Blank')
         }
 
@@ -157,7 +159,8 @@ const useStyles = makeStyles((theme) => ({
                 break;
             
             case 'DONE':
-                completedEdit()
+                console.log('PRessed DONE Current List Number is: ', listNumber)
+                completedEdit(true)
                 break;
         
             default:
@@ -211,7 +214,6 @@ const useStyles = makeStyles((theme) => ({
                    </Grid>
 
                    <Grid item className={classes.columnOdd} xs={6}>List Number</Grid>
-                   
                    <Grid item className={classes.columnOdd} xs={6}> 
                         { 
                             editUser ? <Select
@@ -231,6 +233,60 @@ const useStyles = makeStyles((theme) => ({
                             </Select> : member.listNumber
                         }
                    </Grid>
+
+
+
+
+
+
+                 {/* ============================   CHECK BOXS SECTION   =================================== */}
+                
+                   <Grid item className={classes.columnOdd} xs={6}>Admin Fee</Grid>
+                   <Grid item className={classes.columnOdd} xs={6}> 
+                        { 
+                            editUser 
+                            ? 
+                                <Checkbox checked={adminFee} onChange={handleInputChange} name="adminFee" />
+                            :   member.adminFee ? 'Yes' : 'No'
+                        }
+                   </Grid>
+
+
+
+                   <Grid item className={classes.columnOdd} xs={6}>Investment</Grid>
+                   <Grid item className={classes.columnOdd} xs={6}> 
+                        { 
+                            editUser 
+                            ? 
+                                <Checkbox checked={investment} onChange={handleInputChange} name="investment" />
+                            :   member.investment ? 'Yes' : 'No'
+                        }
+                   </Grid>
+
+
+
+                   <Grid item className={classes.columnOdd} xs={6}>Checkout</Grid>
+                   <Grid item className={classes.columnOdd} xs={6}> 
+                        { 
+                            editUser 
+                            ? 
+                                <Checkbox checked={cashOut} onChange={handleInputChange} name="cashOut" />
+                            :   member.cashOut ? 'Yes' : 'No'
+                        }
+                   </Grid>
+
+
+
+                   <Grid item className={classes.columnOdd} xs={6}>Referred BY</Grid>
+                   <Grid item className={classes.columnOdd} xs={6}> 
+                        { 
+                            editUser 
+                            ? 
+                                <Checkbox checked={cashOut} onChange={handleInputChange} name="cashOut" />
+                            :   member.cashOut ? 'Yes' : 'No'
+                        }
+                   </Grid>
+
 
                    
                    

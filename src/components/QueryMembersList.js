@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import MemeberRow from '../components/MemberRow/MemeberRow'
 import ReactLoading from 'react-loading';
 import { Modal} from '@material-ui/core';
 // import {db} from '../config/firebaseApp';
 
-function QueryMembersList({queryMembers, allMembers, selectedLvlMembers, updateMember}) {
+// queryMembers,  selectedLvlMembers
+function QueryMembersList({allMembers, handleFilters, inputFilter, dropDownVal, updateMember, setInputFilter}) {
     const [expanded, setExpanded] = useState(false);
-    const [members, setMembers] = useState([]);
+    const [queryMembers, setQueryMembers] = useState([]);
     const [openModal, setOpenModal] = useState(false)
-
+    const [queryDropDownVal, setQueryDropDownVal] = useState([])
+    const selectQueryLevelRef = useRef()
 
     // MODAL VARIABLES 
     const [skipMember, setSkipMember] = useState({})
@@ -21,7 +23,8 @@ function QueryMembersList({queryMembers, allMembers, selectedLvlMembers, updateM
     }, [associatedMembers])
 
     useEffect(() => {
-        const availableMembers = selectedLvlMembers().filter(m => m.cashApp != skipMember.cashApp && m.name != skipMember.name)
+        const sameLvl = allMembers.filter(m => m.level === skipMember.level && m.active === true)
+        const availableMembers = sameLvl.filter(m => m.cashApp != skipMember.cashApp && m.name != skipMember.name)
         setAssociatedMembers(availableMembers)
     }, [skipMember])
 
@@ -49,9 +52,11 @@ function QueryMembersList({queryMembers, allMembers, selectedLvlMembers, updateM
 
 
     const goToBottom = (num) => {
+        // debugger
         const lastAvailablePostion = associatedMembers.length + 1 + num
         const updatedListNum = { listNumber:  lastAvailablePostion}
         updateMember({ type: 'UPDATE ENTRY' , payload: {updating: updatedListNum, id: skipMember.memberShipID} })
+        handleModalClose()
     }
 
 
@@ -75,9 +80,20 @@ function QueryMembersList({queryMembers, allMembers, selectedLvlMembers, updateM
     const sortedAllMembers = ()=> allMembers.sort((a,b) =>  (+a.listNumber < +b.listNumber) ? -1 : (+a.listNumber > +b.listNumber) ? 1 : 0 )
 
 
+    // useEffect(() => {
+    //     setMembers(queryMembers)
+    // }, [queryMembers])
+
+
     useEffect(() => {
-        setMembers(queryMembers)
-    }, [queryMembers])
+        setQueryMembers(handleFilters(+selectQueryLevelRef.current?.value))
+    }, [inputFilter, allMembers, queryDropDownVal])
+
+
+
+
+
+
 
     
 
@@ -86,7 +102,7 @@ function QueryMembersList({queryMembers, allMembers, selectedLvlMembers, updateM
         <div style={{height: 400, overflow: 'scroll'}}>
 
             {
-                members.length == 0 
+                allMembers.length == 0 
                 ? 
                     <div>
                         {/* <ReactLoading type='spin' color='#e7ddff' height={'20%'} width={'20%'} /> */}
@@ -114,8 +130,15 @@ function QueryMembersList({queryMembers, allMembers, selectedLvlMembers, updateM
                                 </select>
                             </div>
                         </Modal>
-
-
+                        
+                        Find Member: <input type="text" value={inputFilter} onChange={e => setInputFilter(e.target.value)}/>
+                        <select onChange={(e)=> setQueryDropDownVal(e.target.value)} ref={selectQueryLevelRef} name="levels" >
+                            <option value="1">Level 1</option>
+                            <option value="2">Level 2</option>
+                            <option value="3">Level 3</option>
+                            <option value="4">Level 4</option>
+                            <option value="all">All</option>
+                        </select>
 
                         {
                             queryMembers.map((member,i) => {
@@ -130,6 +153,7 @@ function QueryMembersList({queryMembers, allMembers, selectedLvlMembers, updateM
                                         handleChange={handleChange}
                                         handleModalOpen={mem => handleModalOpen(mem)}
                                         handleModalClose={handleModalClose}
+                                        updateMember={updateMember}
                                     />
                                 )
                             })
