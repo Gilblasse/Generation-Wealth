@@ -5,6 +5,8 @@ import {withRouter} from 'react-router-dom';
 // import ReactLoading from 'react-loading';
 import QueryMembersList from '../components/QueryMembersList'
 import CashingOutProcess from '../components/CashingOutProcess/CashingOutProcess';
+import LoadingPageModal from '../components/LoadingPageModal/LoadingPageModal';
+import ReferredCounts from '../components/ReferredCounts/ReferredCounts';
 
 
 
@@ -16,6 +18,8 @@ function AdminPage(props) {
     // const [expanded, setExpanded] = useState(false);
     const [dropDownVal, setDropDownVal] = useState('1');
     const [inputFilter, setInputFilter] = useState('');
+    const [percent, setPercent] = useState()
+    const [applicationLoading, setApplicationLoading] = useState(true)
     const selectLevelRef = useRef()
     const isNumber = (n) => { return /^-?[\d.]+(?:e-?\d+)?$/.test(n); }
 
@@ -56,17 +60,24 @@ function AdminPage(props) {
     const getAllEntries = async ()=>{
         const membersArr = []
         const membershipRef = await db().collection('memberships').get()
-
+        const total = membershipRef.docs.length
+        console.log('Getting All Entries: ', total)
+        
         for(const membershipDoc of membershipRef.docs){
+            // <LoadingPageModal percent={Math.floor((membersArr.length / total) * 100)}/>
             const membershipData = membershipDoc.data()
+            
             const userDoc = await db().collection('users').doc(membershipData.user).get()
             const user = userDoc.data()
-            const memberInfo = {...membershipData, memberShipID: membershipDoc.id, ...user}
+            const memberInfo = {...membershipData, memberShipID: membershipDoc.id, ...user, userID: userDoc.id}
             
             membersArr.push(memberInfo)
+
+            setPercent(Math.floor((membersArr.length / total) * 100))
         }
-        
-        console.log('ALL MEMBERS FROM DB: ', membersArr)
+
+        console.log('Completed ', total)
+        setApplicationLoading(false)
         setMembers(membersArr)
     }
 
@@ -133,10 +144,13 @@ function AdminPage(props) {
         await db().collection('memberships').doc(id).update(data)
     }
 
-   const cashingOutDB = async (id, newEntryCurrentLVL, newLvlListNum) => {
-        await db().collection('memberships').doc(id).update({active: false})
-        await db().collection('memberships').add(newEntryCurrentLVL)
-        await db().collection('memberships').add(newLvlListNum)
+   const cashingOutDB = async (arrOfEntries) => {
+       for(const entry of arrOfEntries){
+           const {deactivateMemeber: id, newEntryCurrentLVL, newLvlListNum } = entry
+            await db().collection('memberships').doc(id).update({active: false})
+            await db().collection('memberships').add(newEntryCurrentLVL)
+            await db().collection('memberships').add(newLvlListNum)
+       }
    }
     
 
@@ -148,17 +162,10 @@ function AdminPage(props) {
             case 'CASHINGOUT':
                 let updatedMems = []
                 let cashingOutDBarr = []
-                
-                const reaminingMembers = members.filter(mem => {
-                    for(const cashOutMember in payload){
-                        debugger
-                        if(mem.memberShipID != cashOutMember.deactivateMemeber.id){
-                            return false
-                        }
-                        return true
-                    }
-                })  
-                debugger
+                const cashOutIDS = payload.map(mem => mem.deactivateMemeber.id)
+                const reaminingMembers = members.filter(mem => !cashOutIDS.includes( mem.memberShipID ) )
+
+                // debugger
                 payload.forEach( memberUpdate => {
                     const {deactivateMemeber, newEntryCurrentLVL, newLvlListNum, remainingMemberInfo} = memberUpdate
                     const bottomOfListLVLs = [{...newEntryCurrentLVL, ...remainingMemberInfo}, {...newLvlListNum, ...remainingMemberInfo} ]
@@ -168,8 +175,8 @@ function AdminPage(props) {
                     cashingOutDBarr.push({deactivateMemeber: deactivateMemeber.id, newEntryCurrentLVL, newLvlListNum})
                     // cashingOutDB(deactivateMemeber.id,newEntryCurrentLVL,newLvlListNum)
                 })
-
-                debugger
+                updatedQueryArr.push(...reaminingMembers, ...updatedMems)
+                cashingOutDB(cashingOutDBarr)
             break;
             
 
@@ -223,7 +230,7 @@ function AdminPage(props) {
 
             <h1>GW Members</h1>
 
-
+            <LoadingPageModal loading={applicationLoading} percent={percent}/>
             <div>
                 <select onChange={(e)=> setDropDownVal(e.target.value)} ref={selectLevelRef} name="levels" >
                     {/* <option value="all">All</option> */}
@@ -246,6 +253,9 @@ function AdminPage(props) {
                     // selectedLvlMembers={selectedLvlMembers()} 
                     updateMember={(memberAction) => updateMember(memberAction)} 
                 />
+
+
+                <ReferredCounts members={members}/>
             </div>
 
 

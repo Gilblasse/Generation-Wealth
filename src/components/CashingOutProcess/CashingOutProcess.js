@@ -19,10 +19,10 @@ function CashingOutProcess({selectedLvlMembers, allMembers, updateMember}) {
     // const [investment, setInvestment] = useState()
     // const [cashOut, setCashOut] = useState()
 
-    useEffect(() => {
-        // setSelectedIndex(0)
-        setInvestors( findInvestors[selectedLvlMembers()[0]?.memberShipID] )
-    },[findInvestors])
+    // useEffect(() => {
+    //     // setSelectedIndex(0)
+    //     setInvestors( findInvestors[selectedLvlMembers()[0]?.memberShipID] )
+    // },[findInvestors])
 
     useEffect(() => {
         if(isCashingOut){
@@ -227,6 +227,9 @@ function CashingOutProcess({selectedLvlMembers, allMembers, updateMember}) {
                                                         {investor?.listNumber}.
                                                     </ListItemIcon>
                                                     <ListItemText primary={investor?.name} />
+                                                    <ListItemIcon>
+                                                        {investor?.cashApp}
+                                                    </ListItemIcon>
                                                 </ListItem>
     
                                             )
@@ -262,6 +265,9 @@ function CashingOutProcess({selectedLvlMembers, allMembers, updateMember}) {
                                                         {investor?.listNumber}.
                                                     </ListItemIcon>
                                                     <ListItemText primary={investor?.name} />
+                                                    <ListItemIcon>
+                                                        {investor?.cashApp}
+                                                    </ListItemIcon>
                                                 </ListItem>
 
                                             )

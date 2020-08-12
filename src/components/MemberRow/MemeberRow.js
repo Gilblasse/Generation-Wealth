@@ -51,6 +51,7 @@ const useStyles = makeStyles((theme) => ({
     const [level, setLevel] = useState(member.level)
     const [skipCount, setSkipCount] = useState(member.skipCount)
     const [availableListNums, setAvailableListNums ] = useState([])
+    const [referredBY, setReferredBY] = useState(member.referredBy)
     const actionBtn = useRef()
     const classes = useStyles();
     const dropDownLvlVALUE = useRef()
@@ -101,6 +102,17 @@ const useStyles = makeStyles((theme) => ({
         }
         setAvailableListNums(availableNums)
     }
+
+
+    // const getReferredBy = ()=>{
+    //     const referredBy = allMembers.filter(mem => mem.user === member.referralCode)
+    //     if(referredBy.length != 0){
+    //         console.log(`${member.name} was referred by ${referredBy[0]?.user}`)
+    //         return referredBY[0]?.user
+    //     }else{
+    //         return 'NOTHING'
+    //     }
+    // }
 
 
 
@@ -279,12 +291,7 @@ const useStyles = makeStyles((theme) => ({
 
                    <Grid item className={classes.columnOdd} xs={6}>Referred BY</Grid>
                    <Grid item className={classes.columnOdd} xs={6}> 
-                        { 
-                            editUser 
-                            ? 
-                                <Checkbox checked={cashOut} onChange={handleInputChange} name="cashOut" />
-                            :   member.cashOut ? 'Yes' : 'No'
-                        }
+                       { referredBY }
                    </Grid>
 
 

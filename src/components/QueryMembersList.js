@@ -90,6 +90,16 @@ function QueryMembersList({allMembers, handleFilters, inputFilter, dropDownVal, 
     }, [inputFilter, allMembers, queryDropDownVal])
 
 
+    const getReferredBy = (member) =>{
+        const referredBy = allMembers.filter(mem => mem.user === member.referralCode)
+
+        if(referredBy.length != 0){
+            return referredBy[0]?.user
+        }else{
+            return 'NOTHING'
+        }
+
+    }
 
 
 
@@ -142,11 +152,13 @@ function QueryMembersList({allMembers, handleFilters, inputFilter, dropDownVal, 
 
                         {
                             queryMembers.map((member,i) => {
+                                
+
                                 return (
                                     <MemeberRow 
                                         key={i} 
                                         allMembers={sortedAllMembers()} 
-                                        member={member} 
+                                        member={{...member, referredBy: getReferredBy(member)}} 
                                         i={i} 
                                         expanded={expanded} 
                                         setExpanded={setExpanded} 
