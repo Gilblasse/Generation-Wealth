@@ -1,11 +1,12 @@
 import React, {useState} from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import { FormGroup , FormControl, Typography, TextField, Button, Avatar } from '@material-ui/core';
+import { FormGroup , FormControl, Typography, TextField, Button, Avatar, ListItemText } from '@material-ui/core';
 import LockIcon from '@material-ui/icons/Lock';
 import { withRouter } from "react-router";
 import { db } from '../../config/firebaseApp'
 import FooterCaption from '../FooterCaption'
-
+import referralCodeGenerator from 'referral-code-generator'
+import {sendWelcomeSMS} from '../../config/SMS/smsActions'
 
 
 const useStyles = makeStyles((theme) => ({
@@ -36,19 +37,22 @@ function SignUpForm (props) {
 
 
     const handleChange = e =>{
-        const inputValue = e.target.value 
+        let inputValue = e.target.value 
         
         switch (e.target.name) {
            
             case 'name':
+                inputValue = checkNameInput(inputValue)
                 setName(inputValue)
                 break;
 
             case 'cashApp':
+                inputValue = checkCashOutInput(inputValue)
                 setCashApp(inputValue)
                 break;
 
             case 'phoneNumber':
+                inputValue = checkPhoneNumberField(inputValue)
                 setPhoneNumber(inputValue)
                 break;
         
@@ -62,6 +66,33 @@ function SignUpForm (props) {
     }
 
 
+
+
+    const checkNameInput = string => {
+        return string.split(' ').map(s => capitalizeFirstLetter(s)).join(' ')
+    }
+
+    const capitalizeFirstLetter = (string) => {
+        return string.charAt(0).toUpperCase() + string.slice(1);
+    }
+
+    const checkCashOutInput = (cashField) =>{
+        if(cashField.length == 1){
+            const firstChar = cashField[0] != '$' ? '$'+cashField : cashField
+            return firstChar
+        }
+        return cashField
+    }
+
+    const checkPhoneNumberField = number =>{
+        if(number.length !=0){
+            let nonSpaceNums = number.replace(/\D/g,'')
+            let completeNumber = nonSpaceNums.replace(nonSpaceNums.substring(0,1),1)
+            
+            return completeNumber.split('').slice(0,11).join('')
+        }
+        return number
+    }
 
 
     const getlistNumber = async () => {
@@ -80,16 +111,23 @@ function SignUpForm (props) {
         const referrMemebershipID = referrRef ? referrRef.doc.id : referrRef
 
         if(referrMemebershipID){
-            const referrMemebershipLevel = refereredBy.docChanges()[0].doc.data().level
-            const level = referrMemebershipLevel ? referrMemebershipLevel : 1
+            let max = 1 
 
-            return level
+            refereredBy.docs.forEach(doc => {
+                const entry = doc.data()
+                entry.level > max && entry.cashOut === true && (max = entry.level) 
+            })
             
+            return max
+
         }else{
             alert('Please Check The Referral Code')
         }
-        
+
+        return false
     }
+
+
 
     const isUserInDB = async ()=> {
         const user = await db().collection('users').where('cashApp','==', cashApp).get()
@@ -97,7 +135,18 @@ function SignUpForm (props) {
     }
 
 
+
     const handleSubmit = async (e)=> {
+        
+        if(name === '' || cashApp === '' || referralCode === '' || phoneNumber === ''){
+            alert('ERROR: Form Fields Cannot Remain Blank ')
+            return
+
+        }else if(phoneNumber.length !== 11){
+            alert('Please Ensure Phone Number is 11 Digits Long')
+            return
+        }
+
         const checkUserInDB = await isUserInDB()
 
         if(!checkUserInDB){
@@ -115,7 +164,7 @@ function SignUpForm (props) {
                 
                 await db().collection('memberships').add(userMembership)
 
-                sendTextMessage(userInfo)
+                await sendWelcomeSMS(userInfo)
                 
                 props.history.push('/thank-you', { id: userID, user: userInfo} )
             }
@@ -124,42 +173,7 @@ function SignUpForm (props) {
         }
         
     }
-
-
-    const sendTextMessage = async ({name, phoneNumber, listNumber, level, user: referralCode})=>{
-        const message = `
-        Welcome ${name} to GW ‼️
-        When your $100 is needed (or you are up for cash out) you will be texted through this automated system. 🗣
-
-        1st STEPS:
-        1. Please put this number in your name (not your username) Go to settings, edit, and change it there 
-        2. Join this thread for important updates: https://t.me/joinchat/AAAAAE_Lit5NNg2UM2hMRQ
-        3. PAYMENTS & CashOuts: https://t.me/joinchat/AAAAAFfektr0mg3I-RFljg
-        4. Join The secret chat: https://t.me/joinchat/SOoNHxrV9kHOzA1o45YdDw
-        
-        🚨Remember to pop in at least once a day or so esp when it’s your turn. If we can’t contact you and it’s your turn to pay someone out we WILL skip you!! If this happens you have to go to the bottom of the list🚨
-
-        Level: ${level}
-        List Number: ${listNumber}
-        ReferralCode: ${referralCode}
-        ` 
-
-
-        const config = {
-            method: 'POST',
-            headers: {
-                'Content-type': 'application/json'
-            },
-            body: JSON.stringify({
-                message,
-                phoneNumber
-            })
-        }
-
-        fetch(`http://localhost:3001/api/notifications/signup`, config)
-    }
     
-
 
 
     const handleEnterSubmit = e => {
@@ -187,11 +201,11 @@ function SignUpForm (props) {
                 </div>
                 
                 <FormControl style={{marginBottom: 25}}>
-                    <TextField name='name' onChange={handleChange} helperText="" id="outlined-basic" label="Name" variant="outlined" />
+                    <TextField name='name' onChange={handleChange} helperText="" id="outlined-basic" label="Name" variant="outlined" value={name}/>
                 </FormControl>
 
                 <FormControl style={{marginBottom: 25}}>
-                    <TextField name='cashApp' onChange={handleChange} helperText="" id="outlined-basic" label="Cash App" variant="outlined" />
+                    <TextField name='cashApp' onChange={handleChange} helperText="" id="outlined-basic" label="$Cash App" variant="outlined" value={cashApp}/>
                 </FormControl>
 
                 <FormControl style={{marginBottom: 25}}>
@@ -199,7 +213,7 @@ function SignUpForm (props) {
                 </FormControl>
 
                 <FormControl style={{marginBottom: 25}}>
-                    <TextField type="tel" name="phoneNumber" onChange={handleChange} helperText="" id="outlined-basic" label="Mobile Number" variant="outlined" />
+                    <TextField type="tel" name="phoneNumber" onChange={handleChange} helperText="" id="outlined-basic" label="Mobile Number" variant="outlined" value={phoneNumber}/>
                 </FormControl>
                 
                 <Button variant="contained" color="primary" onClick={handleSubmit}>Submit</Button>

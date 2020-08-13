@@ -52,7 +52,6 @@ function QueryMembersList({allMembers, handleFilters, inputFilter, dropDownVal, 
 
 
     const goToBottom = (num) => {
-        // debugger
         const lastAvailablePostion = associatedMembers.length + 1 + num
         const updatedListNum = { listNumber:  lastAvailablePostion}
         updateMember({ type: 'UPDATE ENTRY' , payload: {updating: updatedListNum, id: skipMember.memberShipID} })

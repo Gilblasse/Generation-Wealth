@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react'
 import {Grid, List, ListItem, ListItemIcon, ListItemText} from '@material-ui/core'
-import { db } from '../../config/firebaseApp';
+import { sendCashingOutSMS } from '../../config/SMS/smsActions';
 import CashingOutList from './CashingOutList';
-
+import {sendingSelectedCashOutSMS, sendingInvestorsSMS} from '../../config/SMS/smsActions'
 
 function CashingOutProcess({selectedLvlMembers, allMembers, updateMember}) {
 
@@ -80,6 +80,7 @@ function CashingOutProcess({selectedLvlMembers, allMembers, updateMember}) {
         for(let i=0; i < investorsArry.length; i++){
           dict[cashingOut[i].memberShipID] = investorsArry[i]
         }
+        
       
         setfindInvestors(dict)
     }
@@ -98,7 +99,7 @@ function CashingOutProcess({selectedLvlMembers, allMembers, updateMember}) {
                 
                 if(adminFee && investment && cashOut){  
                     const bottomListNumCurrentLVL = findBottomOfList(level)
-                    let newEntryCurrentLVL = {adminFee: false, investment: false, cashOut: false, listNumber: bottomListNumCurrentLVL, level , user, active: true, skipCount: 0}
+                    let newEntryCurrentLVL = {adminFee: false, investment: true, cashOut: false, listNumber: bottomListNumCurrentLVL, level , user, active: true, skipCount: 0}
                     let remainingMemberInfo = {name,phoneNumber,cashApp,referralCode,memberShipID }
                     let deactivateMemeber = {id: memberShipID}
                     let newLvlListNum;
@@ -108,31 +109,32 @@ function CashingOutProcess({selectedLvlMembers, allMembers, updateMember}) {
                         case 1:
                             console.log('Hit 1')
                             newBottomListNum = findBottomOfList(2)
-                            newLvlListNum = {...newEntryCurrentLVL, listNumber: newBottomListNum, level: 2} 
+                            newLvlListNum = {...newEntryCurrentLVL, investment: false, listNumber: newBottomListNum, level: 2} 
                             break;
                         
                         case 2:
                             console.log('Hit 2')
                             newBottomListNum = findBottomOfList(3)
-                            newLvlListNum = {...newEntryCurrentLVL, listNumber: newBottomListNum, level: 3} 
+                            newLvlListNum = {...newEntryCurrentLVL, investment: false, listNumber: newBottomListNum, level: 3} 
                             break;
 
                         case 3:
                             console.log('Hit 3')
                             newBottomListNum = findBottomOfList(4)
-                            newLvlListNum = {...newEntryCurrentLVL, listNumber: newBottomListNum, level: 4}
+                            newLvlListNum = {...newEntryCurrentLVL, investment: false, listNumber: newBottomListNum, level: 4}
                             break;
 
                         case 4:
                             console.log('Hit 4')
                             newBottomListNum = findBottomOfList(1)
-                            newLvlListNum = {...newEntryCurrentLVL, listNumber: newBottomListNum, level: 1} 
+                            newLvlListNum = {...newEntryCurrentLVL, investment: false, listNumber: newBottomListNum, level: 1} 
                             break;
                     
                         default:
-                            break;
+                        break;
                     }
 
+                    await sendCashingOutSMS(remainingMemberInfo, [newEntryCurrentLVL, newLvlListNum])
                     cashoutUpdates.push({newEntryCurrentLVL, deactivateMemeber, newLvlListNum, remainingMemberInfo})
 
                 }else{
@@ -150,6 +152,11 @@ function CashingOutProcess({selectedLvlMembers, allMembers, updateMember}) {
     }
 
 
+    const handleSendNotification = async ()=>{
+        await sendingSelectedCashOutSMS(selectedLvlMembers().slice(0,numOfCashOuts))
+
+        await sendingInvestorsSMS(Object.values(findInvestors).flat())
+    }
 
 
 
@@ -180,10 +187,10 @@ function CashingOutProcess({selectedLvlMembers, allMembers, updateMember}) {
                     ? 
                         <button disabled>Loading...</button> 
                     :
-                      <button  disabled onClick={() => setIsSendingNotifications(true)}>Notify Entries</button>
+                      <button  onClick={handleSendNotification}>Notify Entries</button>
             }
 
-
+{/* setIsSendingNotifications(true) */}
 
 
             <Grid container spacing={2}>

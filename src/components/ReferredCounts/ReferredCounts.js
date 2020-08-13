@@ -5,20 +5,25 @@ import {Grid, List, ListItem, ListItemIcon, ListItemText, Tooltip, Checkbox} fro
 function ReferredCounts({members}) {
 
     const reduceMembers = () => {
-        const dict = {}
+        let dict = {}
         
         for(const entry of members){
             if(!dict[entry.cashApp]){
+                const referred = members.filter(e => e.referralCode == entry.user).map(m=>m.cashApp)
                 dict[entry.cashApp] = [
-                    members.filter(e => e.referralCode == entry.user).length,
+                    referred.length == 0 ? [] : referred,
                     entry.name 
                 ]
             }else{
-                dict[entry.cashApp][0] += members.filter(e => e.referralCode == entry.user).length
+                const refered = members.filter(e => e.referralCode == entry.user).map(m=>m.cashApp)
+                dict[entry.cashApp][0] += refered.length == 0 ? [] : refered
             }
         }
         
-        return Object.values(dict).sort((a,b) =>  (+a[0] > +b[0]) ? -1 : (+a[0] < +b[0]) ? 1 : 0 )
+        return Object.values(dict).map(e=> [new Set(e[0]).size,e[1]]).sort((a,b) =>  (+a[0] > +b[0]) ? -1 : (+a[0] < +b[0]) ? 1 : 0 )
+        
+        
+        // return Object.values(dict).sort((a,b) =>  (+a[0] > +b[0]) ? -1 : (+a[0] < +b[0]) ? 1 : 0 )
     }
 
 
