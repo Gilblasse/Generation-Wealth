@@ -1,8 +1,44 @@
 import React, { useState, useEffect, useRef } from 'react'
 import MemeberRow from '../components/MemberRow/MemeberRow'
 import ReactLoading from 'react-loading';
-import { Modal} from '@material-ui/core';
+import { Modal , makeStyles } from '@material-ui/core';
 // import {db} from '../config/firebaseApp';
+
+function rand() {
+    return Math.round(Math.random() * 20) - 10;
+}
+
+function getModalStyle() {
+    const top = 50 + rand();
+    const left = 50 + rand();
+  
+    return {
+      top: `${top}%`,
+      left: `${left}%`,
+      transform: `translate(-${top}%, -${left}%)`,
+    };
+  }
+  
+  const useStyles = makeStyles((theme) => ({
+    paper: {
+      position: 'absolute',
+      width: 400,
+      backgroundColor: theme.palette.background.paper,
+      border: '2px solid #000',
+      boxShadow: theme.shadows[5],
+      padding: theme.spacing(2, 4, 3),
+    },
+  }));
+
+
+
+
+
+
+
+
+
+
 
 // queryMembers,  selectedLvlMembers
 function QueryMembersList({allMembers, handleFilters, inputFilter, dropDownVal, updateMember, setInputFilter}) {
@@ -13,6 +49,8 @@ function QueryMembersList({allMembers, handleFilters, inputFilter, dropDownVal, 
     const selectQueryLevelRef = useRef()
 
     // MODAL VARIABLES 
+    const classes = useStyles()
+    const [modalStyle] = React.useState(getModalStyle);
     const [skipMember, setSkipMember] = useState({})
     const [associatedMembers, setAssociatedMembers ] = useState([])
     const [targetMember, setTargetMember] = useState({})
@@ -120,25 +158,27 @@ function QueryMembersList({allMembers, handleFilters, inputFilter, dropDownVal, 
                 : (
                     <div>
                         {/* POPUP SKIP NOTIFICATION */}
-                        <Modal
-                            open={openModal}
-                            onClose={handleModalClose} 
-                            aria-labelledby="simple-modal-title"
-                            aria-describedby="simple-modal-description"
-                            >
-                            <div>
-                                <div>
-                                    Skipping {skipMember.name} with List Number {skipMember.listNumber} || TARGET: {targetMember?.name}
-                                    <button onClick={createNewEntry}>New Entry</button> <button onClick={switchMember}>Switch</button>
+                        <div>
+                            <Modal
+                                open={openModal}
+                                onClose={handleModalClose} 
+                                aria-labelledby="simple-modal-title"
+                                aria-describedby="simple-modal-description"
+                                >
+                                <div style={{width:800, height: 300, margin: '25vh auto', backgroundColor: 'white'}}>
+                                    <div>
+                                        Skipping {skipMember.name} with List Number {skipMember.listNumber} || TARGET: {targetMember?.name}
+                                        <button onClick={createNewEntry}>New Entry</button> <button onClick={switchMember}>Switch</button>
+                                    </div>
+                                    <select onChange={handleModalSelect}>
+                                        {/* <option value={targetMember.memberShipID}>{targetMember.name}</option> */}
+                                        {
+                                            associatedMembers.map(mem => <option value={mem.memberShipID}>{mem.name}</option>)
+                                        }
+                                    </select>
                                 </div>
-                                <select onChange={handleModalSelect}>
-                                    {/* <option value={targetMember.memberShipID}>{targetMember.name}</option> */}
-                                    {
-                                        associatedMembers.map(mem => <option value={mem.memberShipID}>{mem.name}</option>)
-                                    }
-                                </select>
-                            </div>
-                        </Modal>
+                            </Modal>
+                        </div>
                         
                         Find Member: <input type="text" value={inputFilter} onChange={e => setInputFilter(e.target.value)}/>
                         <select onChange={(e)=> setQueryDropDownVal(e.target.value)} ref={selectQueryLevelRef} name="levels" >

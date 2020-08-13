@@ -45,6 +45,7 @@ const useStyles = makeStyles((theme) => ({
     const [editUser, setEditUser] = useState(false)
     const [btnType, setBtnType] = useState('Edit')
     const [listNumber, setListNumber] = useState(member.listNumber)
+    const [phoneNumber, setPhoneNumber] = useState(member.phoneNumber)
     const [adminFee, setAdminFee] = useState(member.adminFee)
     const [investment, setInvestment] = useState(member.investment)
     const [cashOut, setCashOut] = useState(member.cashOut)
@@ -63,6 +64,7 @@ const useStyles = makeStyles((theme) => ({
         setInvestment(member.investment)
         setCashOut(member.cashOut)
         setSkipCount(member.skipCount)
+        setPhoneNumber(member.phoneNumber)
     }, [])
 
     useEffect(() => {
@@ -122,7 +124,8 @@ const useStyles = makeStyles((theme) => ({
             adminFee: {setFunc: setAdminFee, value: e.target.checked},
             investment: {setFunc: setInvestment, value: e.target.checked},
             cashOut: {setFunc: setCashOut, value: e.target.checked},
-            level: {setFunc: setLevel, value: e.target.value}
+            level: {setFunc: setLevel, value: e.target.value},
+            phoneNumber: {setFunc: setPhoneNumber, value: e.target.value}
         }
 
         const setFunction = feilds[e.target.name]['setFunc']
@@ -137,7 +140,7 @@ const useStyles = makeStyles((theme) => ({
     const completedEdit = (done)=>{
         // debugger
         if(listNumber != '' && adminFee != undefined){
-            const membershipFeilds = { listNumber: +listNumber,  level, adminFee, investment, cashOut}
+            const membershipFeilds = { listNumber: +listNumber,  level, adminFee, investment, cashOut, phoneNumber}
             // debugger
             updateMember( { type: 'UPDATE ENTRY', payload: {id: member.memberShipID, updating: membershipFeilds, userEdit: done} } )
             setExpanded(false)
@@ -201,7 +204,20 @@ const useStyles = makeStyles((theme) => ({
 
                <Grid container spacing={2}>
                    <Grid item className={classes.columnOdd} xs={6}>Phone Number</Grid>
-                   <Grid item className={classes.columnOdd} xs={6}> {member.phoneNumber}</Grid>
+                   <Grid item className={classes.columnOdd} xs={6}>
+                   { 
+                            editUser ? (
+                                <TextField  
+                                onChange={handleInputChange} 
+                                name='phoneNumber' 
+                                defaultValue={member.phoneNumber} 
+                                variant="outlined"
+                                value={phoneNumber}
+                                margin="dense" 
+                                />
+                            ) : member.phoneNumber
+                        }
+                    </Grid>
 
                    <Grid item xs={6}>Level </Grid>
                    <Grid item xs={6}> 
