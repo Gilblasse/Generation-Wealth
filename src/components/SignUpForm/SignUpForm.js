@@ -110,11 +110,13 @@ function SignUpForm (props) {
             
                 const userID = newUser.id
                 const userMembership = { level: startingLevel, listNumber, adminFee, cashOut, investment, user: userID, active: true, skipCount: 0}
-    
+                
                 const userInfo =  {...newUserInfo.data(), ...userMembership}
-            
+                
                 await db().collection('memberships').add(userMembership)
-    
+
+                sendTextMessage(userInfo)
+                
                 props.history.push('/thank-you', { id: userID, user: userInfo} )
             }
         }else {
@@ -124,6 +126,38 @@ function SignUpForm (props) {
     }
 
 
+    const sendTextMessage = async ({name, phoneNumber, listNumber, level, user: referralCode})=>{
+        const message = `
+        Welcome ${name} to GW ‼️
+        When your $100 is needed (or you are up for cash out) you will be texted through this automated system. 🗣
+
+        1st STEPS:
+        1. Please put this number in your name (not your username) Go to settings, edit, and change it there 
+        2. Join this thread for important updates: https://t.me/joinchat/AAAAAE_Lit5NNg2UM2hMRQ
+        3. PAYMENTS & CashOuts: https://t.me/joinchat/AAAAAFfektr0mg3I-RFljg
+        4. Join The secret chat: https://t.me/joinchat/SOoNHxrV9kHOzA1o45YdDw
+        
+        🚨Remember to pop in at least once a day or so esp when it’s your turn. If we can’t contact you and it’s your turn to pay someone out we WILL skip you!! If this happens you have to go to the bottom of the list🚨
+
+        Level: ${level}
+        List Number: ${listNumber}
+        ReferralCode: ${referralCode}
+        ` 
+
+
+        const config = {
+            method: 'POST',
+            headers: {
+                'Content-type': 'application/json'
+            },
+            body: JSON.stringify({
+                message,
+                phoneNumber
+            })
+        }
+
+        fetch(`http://localhost:3001/api/notifications/signup`, config)
+    }
     
 
 
