@@ -78,7 +78,7 @@ function SignUpForm (props) {
         const entry =  await getMemberLevel()
 
         if(entry){
-            debugger
+            // debugger
 
             // await sendTextMessage(userInfo)  
             // props.history.push('/thank-you', { id: userID, user: userInfo} )

@@ -4,44 +4,38 @@ import {Grid, List, ListItem, ListItemIcon, ListItemText, Tooltip, Checkbox} fro
 
 function ReferredCounts({members}) {
 
+    
+
     const reduceMembers = () => {
         let dict = {}
-        
-        for(const entry of members){
-            if(!dict[entry.cashApp]){
-                const referred = members.filter(e => e.referralCode == entry.user).map(m=>m.cashApp)
-                dict[entry.cashApp] = [
-                    referred.length == 0 ? [] : referred,
-                    entry.name 
-                ]
-            }else{
-                const refered = members.filter(e => e.referralCode == entry.user).map(m=>m.cashApp)
-                dict[entry.cashApp][0] += refered.length == 0 ? [] : refered
+        let users = members.forEach(e=> !dict[e.user] && (dict[e.user]={userName:e.name, referred:{} }))
+
+        members.forEach(e=> {
+            if(dict[e.referralCode]){
+                dict[e.referralCode]['referred'][e.user] = true
             }
-        }
+        })
         
-        return Object.values(dict).map(e=> [new Set(e[0]).size,e[1]]).sort((a,b) =>  (+a[0] > +b[0]) ? -1 : (+a[0] < +b[0]) ? 1 : 0 )
-        
-        
-        // return Object.values(dict).sort((a,b) =>  (+a[0] > +b[0]) ? -1 : (+a[0] < +b[0]) ? 1 : 0 )
+        return Object.values(dict).sort((a,b) =>  ( Object.keys(a['referred']).length > Object.keys(b['referred']).length ) ? -1 : (Object.keys(a['referred']).length < Object.keys(b['referred']).length) ? 1 : 0 )
     }
 
 
 
     return (
         <div>
+            REFERRED COUNT IS HERE
             {
-                reduceMembers().map(member => {
+                reduceMembers().map(user => {
 
                     return (
                         <List>
                             <ListItem>
                                 <Grid container spacing={2}>
                                     <Grid item xs={6}>
-                                        {member[1]}
+                                        {user.userName}
                                     </Grid>
                                     <Grid item xs={6}>
-                                        {member[0]}
+                                        {Object.keys(user.referred).length}
                                     </Grid>
                                 </Grid>
                             </ListItem>

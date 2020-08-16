@@ -33,10 +33,11 @@ export const messageForInvestors = `
 `
 
 
-export const cashingOutMessage = (level, listNumber) => {
+export const cashingOutMessage = (name,oldLvl,oldLvlNewListNum, newLvl, newLvlNewListNum) => {
     return `
-        🎊🎈 CONGRTUALTIONS 🎊🎈 \n
-        Your New Level: ${level} \n
-        Your New List Number: ${listNumber}
+        🎊🎈 CONGRATULATIONS ${name} on Cashing out 🎊🎈 \n
+        Below is your Updated list numbers for their Corresponding Levels.\n
+        Level: ${oldLvl} => List Number: ${oldLvlNewListNum} \n
+        Level: ${newLvl} => List Number: ${newLvlNewListNum}
     `
 }

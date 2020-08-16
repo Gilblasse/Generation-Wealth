@@ -1,8 +1,32 @@
 import React, { useState, useEffect, useRef } from 'react'
-import {Grid, List, ListItem, ListItemIcon, ListItemText} from '@material-ui/core'
+import {Grid, List, ListItem, ListItemIcon, ListItemText, Card, CardActions, CardContent, Button, Typography, makeStyles,Divider} from '@material-ui/core'
 import { sendCashingOutSMS } from '../../config/SMS/smsActions';
 import CashingOutList from './CashingOutList';
 import {sendingSelectedCashOutSMS, sendingInvestorsSMS} from '../../config/SMS/smsActions'
+import './CashingOutProcess.css'
+
+
+
+const useStyles = makeStyles({
+    root: {
+      minWidth: 275,
+      height: 250
+    },
+    bullet: {
+      display: 'inline-block',
+      margin: '0 2px',
+      transform: 'scale(0.8)',
+    },
+    title: {
+      fontSize: 14,
+    },
+    pos: {
+      marginBottom: 12,
+    },
+  });
+
+
+
 
 function CashingOutProcess({selectedLvlMembers, allMembers, updateMember}) {
 
@@ -23,6 +47,8 @@ function CashingOutProcess({selectedLvlMembers, allMembers, updateMember}) {
     //     // setSelectedIndex(0)
     //     setInvestors( findInvestors[selectedLvlMembers()[0]?.memberShipID] )
     // },[findInvestors])
+
+    const classes = useStyles();
 
     useEffect(() => {
         if(isCashingOut){
@@ -134,7 +160,7 @@ function CashingOutProcess({selectedLvlMembers, allMembers, updateMember}) {
                         break;
                     }
 
-                    await sendCashingOutSMS(remainingMemberInfo, [newEntryCurrentLVL, newLvlListNum])
+                    // await sendCashingOutSMS(remainingMemberInfo, [newEntryCurrentLVL, newLvlListNum])
                     cashoutUpdates.push({newEntryCurrentLVL, deactivateMemeber, newLvlListNum, remainingMemberInfo})
 
                 }else{
@@ -147,16 +173,22 @@ function CashingOutProcess({selectedLvlMembers, allMembers, updateMember}) {
             // debugger 
         }
         // debugger
-        cashoutUpdates.length != 0 && updateMember( { type: 'CASHINGOUT', payload: cashoutUpdates } )
         setIsCashingOut(false)
+        cashoutUpdates.length != 0 && updateMember( { type: 'CASHINGOUT', payload: cashoutUpdates } )
+        debugger
+        cashoutUpdates.length != 0 && sendCashingOutSMS(cashoutUpdates)
     }
 
 
     const handleSendNotification = async ()=>{
-        await sendingSelectedCashOutSMS(selectedLvlMembers().slice(0,numOfCashOuts))
-
+        // await sendingSelectedCashOutSMS(selectedLvlMembers().slice(0,numOfCashOuts))
+        
         await sendingInvestorsSMS(Object.values(findInvestors).flat())
     }
+
+
+
+
 
 
 
@@ -193,8 +225,7 @@ function CashingOutProcess({selectedLvlMembers, allMembers, updateMember}) {
 {/* setIsSendingNotifications(true) */}
 
 
-            <Grid container spacing={2}>
-
+            <Grid container direction="column" spacing={2}>
 
 
                 {/*=============  CASHING OUT MEMBERS  =======*/}
@@ -215,39 +246,52 @@ function CashingOutProcess({selectedLvlMembers, allMembers, updateMember}) {
 
                 {/*=============  INVESTORS RESPONSIBLE FOR PAYING CASHING OUT MEMBERS  =======*/}
                 
-                <Grid item style={{border: '1px solid black'}}>
-                <h5>PAYING CASHING OUT MEMBERS</h5>
-                    <List component="nav" style={{overflow: 'scroll', height: 200}} dense>
-                        {   
-                            selectedLvlMembers().length != 0 && (
-                                (
-                                    investors && investors.length === 7) && (
-                                    <>
-                                        {/* <h5>PAYING CASHING OUT MEMBERS</h5> */}
-                                        {
-    
-                                        investors.slice(0,-2).map(investor => {
-                                            return (
-    
-                                                <ListItem>
-                                                    <ListItemIcon>
-                                                        {investor?.listNumber}.
-                                                    </ListItemIcon>
-                                                    <ListItemText primary={investor?.name} />
-                                                    <ListItemIcon>
-                                                        {investor?.cashApp}
-                                                    </ListItemIcon>
-                                                </ListItem>
-    
-                                            )
-                                        })
-                                        }
-                                    </>
-                                )
+                <Grid item>
+                     <Card className={classes.root} classeName='cashingOutProcess__listContainer'>
+                        <CardContent>
+                            <Typography variant="h6">
+                                Investors Paying Cashing Out Members
+                            </Typography>
+                            <Divider />
+                                <List component="nav" dense className='cashingOutProcess__listOfInvestors'>
+                                    {   
+                                        selectedLvlMembers().length != 0 && (
+                                            (
+                                                investors && investors.length === 7) && (
+                                                <>
 
-                            )
-                        }
-                    </List>
+                                                    {
+                                                    investors.slice(0,-2).map(investor => {
+                                                        return (
+                
+                                                            <ListItem>
+                                                                <ListItemText primary={
+                                                                    <>
+                                                                        <ListItemIcon>
+                                                                        {investor?.listNumber}.
+                                                                        </ListItemIcon>
+                                                                        {investor?.name}
+                                                                    </>
+                                                                } />
+
+   
+                                                                <ListItemIcon>
+                                                                    {investor?.cashApp}
+                                                                </ListItemIcon>
+                                                            </ListItem>
+                
+                                                        )
+                                                    })
+                                                    }
+                                                </>
+                                            )
+
+                                        )
+                                    }
+                                </List>
+                        </CardContent>
+
+                    </Card>
                 </Grid>
 
 
@@ -256,37 +300,53 @@ function CashingOutProcess({selectedLvlMembers, allMembers, updateMember}) {
                 {/*=============  INVESTORS RESPONSIBLE FOR PAYING GW  =======*/}
 
                 <Grid item>
-                    <List component="nav">
-                        {
-                            selectedLvlMembers().length != 0 && (
-                                (investors && investors.length === 7) && (
-                                    <>
-                                        <h5>PAYING GW</h5>
-                                        {
+                     <Card className={classes.root}>
+                        <CardContent>
+                            <Typography variant="h6">
+                                Paying Generational Wealth
+                            </Typography>
+                            <Divider />
+                                <List component="nav" dense>
+                                    {   
+                                        selectedLvlMembers().length != 0 && (
+                                            (
+                                                investors && investors.length === 7) && (
+                                                <>
 
-                                        investors.slice(-2).map(investor => {
-                                            return (
+                                                    {
+                                                    investors.slice(-2).map(investor => {
+                                                        return (
+                
+                                                            <ListItem>
+                                                                <ListItemText primary={
+                                                                    <>
+                                                                        <ListItemIcon>
+                                                                        {investor?.listNumber}.
+                                                                        </ListItemIcon>
+                                                                        {investor?.name}
+                                                                    </>
+                                                                } />
 
-                                                <ListItem>
-                                                    <ListItemIcon>
-                                                        {investor?.listNumber}.
-                                                    </ListItemIcon>
-                                                    <ListItemText primary={investor?.name} />
-                                                    <ListItemIcon>
-                                                        {investor?.cashApp}
-                                                    </ListItemIcon>
-                                                </ListItem>
-
+   
+                                                                <ListItemIcon>
+                                                                    {investor?.cashApp}
+                                                                </ListItemIcon>
+                                                            </ListItem>
+                
+                                                        )
+                                                    })
+                                                    }
+                                                </>
                                             )
-                                        })
-                                        }
-                                    </>
-                                )
-                            )
-                        }
-                    </List>
-                </Grid>
 
+                                        )
+                                    }
+                                </List>
+                        </CardContent>
+
+                    </Card>
+                </Grid>
+                
 
 
             </Grid>

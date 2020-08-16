@@ -46,13 +46,15 @@ const useStyles = makeStyles((theme) => ({
     const [btnType, setBtnType] = useState('Edit')
     const [listNumber, setListNumber] = useState(member.listNumber)
     const [phoneNumber, setPhoneNumber] = useState(member.phoneNumber)
+    const [name, setName] = useState(member.name)
+    const [cashApp, setCashApp] = useState(member.phoneNumber)
     const [adminFee, setAdminFee] = useState(member.adminFee)
     const [investment, setInvestment] = useState(member.investment)
     const [cashOut, setCashOut] = useState(member.cashOut)
     const [level, setLevel] = useState(member.level)
     const [skipCount, setSkipCount] = useState(member.skipCount)
     const [availableListNums, setAvailableListNums ] = useState([])
-    const [referredBY, setReferredBY] = useState(member.referredBy)
+    const [referredBY, setReferredBY] = useState()
     const actionBtn = useRef()
     const classes = useStyles();
     const dropDownLvlVALUE = useRef()
@@ -65,6 +67,9 @@ const useStyles = makeStyles((theme) => ({
         setCashOut(member.cashOut)
         setSkipCount(member.skipCount)
         setPhoneNumber(member.phoneNumber)
+        setCashApp(member.cashApp)
+        setName(member.name)
+        getReferredBY()
     }, [])
 
     useEffect(() => {
@@ -72,6 +77,7 @@ const useStyles = makeStyles((theme) => ({
             console.log('Finding List nums for LvL: ', level)
             // setListNumber('')
             findAvaliableListNums()
+            getReferredBY()
         }
     }, [level,editUser])
 
@@ -81,6 +87,23 @@ const useStyles = makeStyles((theme) => ({
         }
     }, [listNumber])
 
+
+    useEffect(()=>{
+        getReferredBY()
+    },[expanded])
+
+
+    const getReferredBY = async()=>{
+        let referredByUser;
+        if(member.referredBY !== 'Nothing'){
+            const user = allMembers.find(e => e.user == member.referredBy)
+            referredByUser = user ? user.name : 'No One'
+        }else{
+            referredByUser = 'No One'
+        }
+        
+        return setReferredBY(referredByUser)
+    }   
 
 
     const findAvaliableListNums = () => {
@@ -119,13 +142,15 @@ const useStyles = makeStyles((theme) => ({
 
 
     const handleInputChange = (e)=> {
-        const feilds = {
+        const feilds = {    
             listNumber: {setFunc: setListNumber, value: e.target.value},
             adminFee: {setFunc: setAdminFee, value: e.target.checked},
             investment: {setFunc: setInvestment, value: e.target.checked},
             cashOut: {setFunc: setCashOut, value: e.target.checked},
             level: {setFunc: setLevel, value: e.target.value},
-            phoneNumber: {setFunc: setPhoneNumber, value: e.target.value}
+            phoneNumber: {setFunc: setPhoneNumber, value: e.target.value},
+            name: {setFunc: setName, value: e.target.value},
+            cashApp: {setFunc: setCashApp, value: e.target.value}
         }
 
         const setFunction = feilds[e.target.name]['setFunc']
@@ -140,7 +165,7 @@ const useStyles = makeStyles((theme) => ({
     const completedEdit = (done)=>{
         // debugger
         if(listNumber != '' && adminFee != undefined){
-            const membershipFeilds = { listNumber: +listNumber,  level, adminFee, investment, cashOut, phoneNumber}
+            const membershipFeilds = { listNumber: +listNumber,  level, adminFee, investment, cashOut, phoneNumber, cashApp, name, skipCount}
             // debugger
             updateMember( { type: 'UPDATE ENTRY', payload: {id: member.memberShipID, updating: membershipFeilds, userEdit: done} } )
             setExpanded(false)
@@ -203,6 +228,40 @@ const useStyles = makeStyles((theme) => ({
 
 
                <Grid container spacing={2}>
+
+                   <Grid item className={classes.columnOdd} xs={6}>Name</Grid>
+                   <Grid item className={classes.columnOdd} xs={6}>
+                   { 
+                            editUser ? (
+                                <TextField  
+                                onChange={handleInputChange} 
+                                name='name' 
+                                defaultValue={member.name} 
+                                variant="outlined"
+                                value={name}
+                                margin="dense" 
+                                />
+                            ) : member.name
+                        }
+                    </Grid>
+                   
+                   <Grid item className={classes.columnOdd} xs={6}>Cash App</Grid>
+                   <Grid item className={classes.columnOdd} xs={6}>
+                   { 
+                            editUser ? (
+                                <TextField  
+                                onChange={handleInputChange} 
+                                name='cashApp' 
+                                defaultValue={member.cashApp} 
+                                variant="outlined"
+                                value={cashApp}
+                                margin="dense" 
+                                />
+                            ) : member.cashApp
+                        }
+                    </Grid>
+
+
                    <Grid item className={classes.columnOdd} xs={6}>Phone Number</Grid>
                    <Grid item className={classes.columnOdd} xs={6}>
                    { 
@@ -261,10 +320,7 @@ const useStyles = makeStyles((theme) => ({
                             </Select> : member.listNumber
                         }
                    </Grid>
-
-
-
-
+                
 
 
                  {/* ============================   CHECK BOXS SECTION   =================================== */}
@@ -310,7 +366,8 @@ const useStyles = makeStyles((theme) => ({
                        { referredBY }
                    </Grid>
 
-
+                   {/* <Grid item className={classes.columnOdd} xs={6}>Skiped</Grid>
+                   <Grid item className={classes.columnOdd} xs={6}> {skipCount}</Grid> */}
                    
                    
                    

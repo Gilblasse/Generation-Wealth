@@ -73,19 +73,43 @@ function QueryMembersList({allMembers, handleFilters, inputFilter, dropDownVal, 
     
     const createNewEntry = ()=> {
         const {level, user, name,phoneNumber,cashApp,referralCode,memberShipID } = targetMember
+        const skipedMemberUpdatedListNum = { listNumber: associatedMembers.splice(-1)[0].listNumber + 1 }
         const {listNumber} = skipMember
-        const userMembership = { level, listNumber, user, adminFee: false, cashOut: false, investment: false }
+        const userMembership = { level, listNumber, user, adminFee: false, cashOut: false, investment: false, active: true, skipCount: 0}
         const remainingMemberInfo = {name,phoneNumber,cashApp,referralCode,memberShipID }
+        // skipCount: skipMember.skipCount + 1
+ 
+        updateMember({ 
+            type: 'UPDATE AND NEW ENTRY' , 
+            payload: {
+                newEntry: userMembership, userInfo: remainingMemberInfo, 
+                update:{data: skipedMemberUpdatedListNum, id: skipMember.memberShipID}
+            },
+        })
 
-        updateMember({ type: 'ADD NEW ENTRY' , payload: {newEntry: userMembership, userInfo: remainingMemberInfo} })
-        goToBottom(1)
+        handleModalClose()
+        setExpanded(false)
     }
 
+    const skipMemberToBottom = ()=> {
+        const skipedMemberUpdatedListNum = { listNumber: associatedMembers.splice(-1)[0].listNumber + 1 }
+        updateMember({ type: 'UPDATE ENTRY' , payload: {updating: skipedMemberUpdatedListNum, id: skipMember.memberShipID, userEdit: true} })
+        handleModalClose()
+    }
 
-    const switchMember = ()=>{
-        const updatedListNum = { listNumber: skipMember.listNumber }
-        updateMember({ type: 'UPDATE ENTRY' , payload: {updating: updatedListNum, id: targetMember.memberShipID} })
-        goToBottom(2)
+    
+    const replaceMember = ()=>{
+        const targetUpdatedListNum = { listNumber: skipMember.listNumber }
+        const skipedMemberUpdatedListNum = { listNumber: associatedMembers.splice(-1)[0].listNumber + 1}
+        
+        const updateEntries = [
+            {updating: targetUpdatedListNum, id: targetMember.memberShipID},
+            {updating: skipedMemberUpdatedListNum, id: skipMember.memberShipID}
+        ]
+ 
+        updateMember({ type: 'BULK UPDATE' , payload: updateEntries })
+        handleModalClose()
+        setExpanded(false)
     }
 
 
@@ -117,13 +141,16 @@ function QueryMembersList({allMembers, handleFilters, inputFilter, dropDownVal, 
     const sortedAllMembers = ()=> allMembers.sort((a,b) =>  (+a.listNumber < +b.listNumber) ? -1 : (+a.listNumber > +b.listNumber) ? 1 : 0 )
 
 
-    // useEffect(() => {
-    //     setMembers(queryMembers)
-    // }, [queryMembers])
+    useEffect(() => {
+        console.log('QUERY LIST MEMBERS UPDATED: => ', queryMembers)
+    }, [queryMembers])
 
 
     useEffect(() => {
-        setQueryMembers(handleFilters(+selectQueryLevelRef.current?.value))
+        console.log('QUERY MEMBERS UPDATING')
+        const sortedMembers = handleFilters(+selectQueryLevelRef.current?.value)
+        setQueryMembers(sortedMembers)
+        console.log('Set QueryMembersList with Updated Sorted MEMBERS')
     }, [inputFilter, allMembers, queryDropDownVal])
 
 
@@ -146,17 +173,26 @@ function QueryMembersList({allMembers, handleFilters, inputFilter, dropDownVal, 
 
 
     return (
-        <div style={{height: 400, overflow: 'scroll'}}>
+        <div>
+
+            Find Member: <input type="text" value={inputFilter} onChange={e => setInputFilter(e.target.value)}/>
+            <select onChange={(e)=> setQueryDropDownVal(e.target.value)} ref={selectQueryLevelRef} name="levels" >
+                <option value="1">Level 1</option>
+                <option value="2">Level 2</option>
+                <option value="3">Level 3</option>
+                <option value="4">Level 4</option>
+                <option value="all">All</option>
+            </select>
 
             {
                 allMembers.length == 0 
                 ? 
                     <div>
                         {/* <ReactLoading type='spin' color='#e7ddff' height={'20%'} width={'20%'} /> */}
-                        Search Not Found: 
+                        Search Not Found:  
                     </div> 
                 : (
-                    <div>
+                    <div style={{height: 600, overflow: 'scroll'}}>
                         {/* POPUP SKIP NOTIFICATION */}
                         <div>
                             <Modal
@@ -168,7 +204,7 @@ function QueryMembersList({allMembers, handleFilters, inputFilter, dropDownVal, 
                                 <div style={{width:800, height: 300, margin: '25vh auto', backgroundColor: 'white'}}>
                                     <div>
                                         Skipping {skipMember.name} with List Number {skipMember.listNumber} || TARGET: {targetMember?.name}
-                                        <button onClick={createNewEntry}>New Entry</button> <button onClick={switchMember}>Switch</button>
+                                        <button onClick={createNewEntry}>New Entry</button> <button onClick={replaceMember}>Replace</button>
                                     </div>
                                     <select onChange={handleModalSelect}>
                                         {/* <option value={targetMember.memberShipID}>{targetMember.name}</option> */}
@@ -180,14 +216,7 @@ function QueryMembersList({allMembers, handleFilters, inputFilter, dropDownVal, 
                             </Modal>
                         </div>
                         
-                        Find Member: <input type="text" value={inputFilter} onChange={e => setInputFilter(e.target.value)}/>
-                        <select onChange={(e)=> setQueryDropDownVal(e.target.value)} ref={selectQueryLevelRef} name="levels" >
-                            <option value="1">Level 1</option>
-                            <option value="2">Level 2</option>
-                            <option value="3">Level 3</option>
-                            <option value="4">Level 4</option>
-                            <option value="all">All</option>
-                        </select>
+                        
 
                         {
                             queryMembers.map((member,i) => {

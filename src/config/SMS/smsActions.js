@@ -24,11 +24,14 @@ export const sendWelcomeSMS = async ({name, phoneNumber, listNumber, level, user
 
 
 
-export const sendCashingOutSMS = async ({phoneNumber}, entries)=>{
+export const sendCashingOutSMS = async (cashingOutArr)=>{
 
-    for (const entry of entries){
-        const {listNumber, level} = entry
-        const message = cashingOutMessage(level, listNumber)
+    for(const cashingOut of cashingOutArr){
+        const {newEntryCurrentLVL, newLvlListNum, remainingMemberInfo} = cashingOut
+        const {listNumber: oldLvlNewListNum , level: oldLvl} = newEntryCurrentLVL
+        const {listNumber: newLvlNewListNum, level: newLvl} = newLvlListNum
+        const {name, phoneNumber} = remainingMemberInfo
+        const message = cashingOutMessage(name,oldLvl,oldLvlNewListNum, newLvl, newLvlNewListNum)
 
         const config = {
             method: 'POST',
@@ -38,8 +41,10 @@ export const sendCashingOutSMS = async ({phoneNumber}, entries)=>{
             body: JSON.stringify({ message, phoneNumber })
         }
 
+        // debugger
         await fetch(baseURL, config)
     }
+
 }
 
 
@@ -70,17 +75,13 @@ export const sendingSelectedCashOutSMS = async (users)=>{
 export const sendingInvestorsSMS = async (investors)=>{
     const message = messageForInvestors
 
-    for (const investor of investors){
-        const {phoneNumber} = investor
-
-        const config = {
-            method: 'POST',
-            headers: {
-                'Content-type': 'application/json'
-            },
-            body: JSON.stringify({ message, phoneNumber })
-        }
-
-        await fetch(baseURL, config)
+    const config = {
+        method: 'POST',
+        headers: {
+            'Content-type': 'application/json'
+        },
+        body: JSON.stringify({ data:{message,investors} })
     }
+
+    fetch(`${baseURL}/investors`, config)
 }

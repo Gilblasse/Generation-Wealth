@@ -1,0 +1,16 @@
+.cashingOutProcess__cards{
+    border: '1px solid black'
+}
+
+/* style={{overflow: 'scroll', height: 200}} */
+
+
+
+.cashingOutProcess__listContainer{
+    height: 200px
+}
+
+.cashingOutProcess__listOfInvestors{
+    height: 100px;
+    overflow: 'scroll'
+}

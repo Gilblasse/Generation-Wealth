@@ -1,0 +1,15 @@
+.navigationBar{
+    display: flex;
+    justify-content: flex-end;
+    border-bottom: 1px solid rgba(0,0,0,.12);
+    border-top: 1px solid rgba(0,0,0,.12);
+}
+
+.navigationBar__profileSection{
+    /* width: 50px; */
+}
+
+.navigationBar__profile{
+    display: flex 
+
+}

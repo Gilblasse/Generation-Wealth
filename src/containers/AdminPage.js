@@ -7,7 +7,9 @@ import QueryMembersList from '../components/QueryMembersList'
 import CashingOutProcess from '../components/CashingOutProcess/CashingOutProcess';
 import LoadingPageModal from '../components/LoadingPageModal/LoadingPageModal';
 import ReferredCounts from '../components/ReferredCounts/ReferredCounts';
-
+import {Grid} from '@material-ui/core'
+import NavigationBar from './NavigationBar/NavigationBar';
+import './AdminPage.css'
 
 
 function AdminPage(props) {
@@ -37,7 +39,7 @@ function AdminPage(props) {
     //             const membershipData = membershipDoc.data()
     //             const userDoc = await db().collection('users').doc(membershipData.user).get()
     //             const user = userDoc.data()
-    //             const memberInfo = {...membershipData, memberShipID: membershipDoc.id, ...user}
+    //             const memberInfo = {...membershipData, memberShipID: membershipDoc.id, ...user, userID: userDoc.id}
                 
     //             membersArr.push(memberInfo)
     //         }
@@ -84,19 +86,25 @@ function AdminPage(props) {
   
 
     useEffect(() =>{
-        selectedLvlMembers()
+        console.log('MEMBERS UPDATED SIZE => ', members.length)
+        console.log('MEMBERS UPDATED => ', members)
+        // selectedLvlMembers()
     },[members])
    
 
-    // ADMIN LOG OUT SECTION
-    const handleLogout = ()=>{
-        auth().signOut()
-        props.history.push('/gw-admin')
-    }
+    // // ADMIN LOG OUT SECTION
+    // const handleLogout = ()=>{
+    //     auth().signOut()
+    //     props.history.push('/gw-admin')
+    // }
 
 
     // FILTERS SECTION
     const handleFilters = (queryDropDownVal) => {
+        console.log('Query Members List Calling ON Hanldle Filter')
+        console.log('Members Size Querying on => ', members.length)
+        console.log('Members Querying on => ', members)
+
         let copyofMembers = [...members] 
         let memberResults;
 
@@ -118,8 +126,10 @@ function AdminPage(props) {
             memberResults = [...members]
         }
 
-        const filteredMembers = selectedLvlMembers(memberResults, queryDropDownVal)
-
+        // const sameLevel = memberResults.filter(e => e.level === queryDropDownVal).filter(e=> e.active == true)
+        // const sortedOnSameLvl = sameLevel.sort((a,b) =>  (+a.listNumber < +b.listNumber) ? -1 : (+a.listNumber > +b.listNumber) ? 1 : 0 )
+        const filteredMembers = selectedLvlMembers(memberResults, queryDropDownVal)()
+        // console.log('Handle Filter Returns MEMBERS => ', sortedOnSameLvl)
         return filteredMembers
     }
 
@@ -128,7 +138,7 @@ function AdminPage(props) {
         const selectedMembers = mem || members
         const dropDwnLVLval = selectedLVL || +selectLevelRef.current?.value
         const associatedMembers = isNaN(selectedLVL) ? selectedMembers : selectedMembers.filter(mem => +mem.level == dropDwnLVLval )
-        const activeMembers = associatedMembers.filter(mem => mem.active === true)
+        const activeMembers = associatedMembers.filter(mem => mem.active === true).filter(e=> e.skipCount < 2)
         const sortedMembers = ()=> activeMembers.sort((a,b) =>  (+a.listNumber < +b.listNumber) ? -1 : (+a.listNumber > +b.listNumber) ? 1 : 0 )
 
         return sortedMembers
@@ -154,6 +164,20 @@ function AdminPage(props) {
    }
     
 
+   const updateBulkEntries = async (bulkEntries) =>{
+        for(const entry of bulkEntries){
+            let {memberShipID: id, active, adminFee, cashOut, investment, level, listNumber, skipCount, user} = entry
+            skipCount = skipCount || 0
+            const updatedEntry = {active, adminFee, cashOut, investment, level, listNumber, skipCount, user}
+            
+            await db().collection('memberships').doc(id).update(updatedEntry)
+        }
+    }
+
+
+
+
+
     const updateMember = ({type , payload}) => {
 
         let updatedQueryArr = []
@@ -162,21 +186,24 @@ function AdminPage(props) {
             case 'CASHINGOUT':
                 let updatedMems = []
                 let cashingOutDBarr = []
+                // let prepareMessages = []
                 const cashOutIDS = payload.map(mem => mem.deactivateMemeber.id)
                 const reaminingMembers = members.filter(mem => !cashOutIDS.includes( mem.memberShipID ) )
 
-                // debugger
+                
                 payload.forEach( memberUpdate => {
                     const {deactivateMemeber, newEntryCurrentLVL, newLvlListNum, remainingMemberInfo} = memberUpdate
                     const bottomOfListLVLs = [{...newEntryCurrentLVL, ...remainingMemberInfo}, {...newLvlListNum, ...remainingMemberInfo} ]
-                    
+                    // prepareMessages[] 
                     updatedMems.push(...bottomOfListLVLs)
                     // DB Actions
                     cashingOutDBarr.push({deactivateMemeber: deactivateMemeber.id, newEntryCurrentLVL, newLvlListNum})
-                    // cashingOutDB(deactivateMemeber.id,newEntryCurrentLVL,newLvlListNum)
                 })
+
+                
                 updatedQueryArr.push(...reaminingMembers, ...updatedMems)
                 cashingOutDB(cashingOutDBarr)
+                // sendCashingOutSMS(cashingOutDBarr)
             break;
             
 
@@ -193,13 +220,12 @@ function AdminPage(props) {
                 
                 let {active, adminFee, cashOut, investment, level, listNumber, skipCount} = currentMEM
                 skipCount = skipCount || 0
-                const updateData = {active, adminFee, cashOut, investment, level, listNumber, skipCount}
+                let updateData = {active, adminFee, cashOut, investment, level, listNumber, skipCount}
                 // debugger
                 updatedQueryArr = [...updatedMembers]
 
                 // db Actions
                 if(payload.userEdit){
-                    // debugger
                     updateMembersInfo(payload.id, updateData)
                 } 
             break;
@@ -210,9 +236,41 @@ function AdminPage(props) {
                 // db Actions
                 addedNewEntry(payload.newEntry)
             break
+
+
+            case 'UPDATE AND NEW ENTRY': 
+                console.log('Originial members => ', members.length)
+                const memObj = members.find(e=> e.memberShipID === payload.update.id)
+                const updateMemObj = {...memObj, ...payload.update.data}
+                const leftOvers = members.filter(e=> e.memberShipID != payload.update.id)
+                const newEntryInfo = {...payload.newEntry, ...payload.userInfo}
+                
+                updatedQueryArr = [...leftOvers, newEntryInfo, updateMemObj]
+                
+                addedNewEntry(payload.newEntry)
+                updateMembersInfo(payload.update.id, payload.update.data)
+            break;
+
+
+            case 'BULK UPDATE':
+                const ids = payload.map(e=>e.id)
+                const restOfMembers = members.filter(m=> !ids.includes(m.memberShipID))
+                const currentEntries = []
+                let entry;
+                
+                payload.forEach(e=>{
+                    entry = members.find(m => m.memberShipID == e.id)
+                    entry && currentEntries.push({...entry, ...e.updating})
+                })
+                debugger
+                updatedQueryArr = [...restOfMembers,...currentEntries]
+
+                updateBulkEntries(currentEntries)
+            break;
         
+
             default:
-                break;
+            break;
         }
 
         setMembers(updatedQueryArr)
@@ -224,39 +282,46 @@ function AdminPage(props) {
     
 
     return (
-        <div style={{width: 750, margin: '25px auto 0'}}>
-            AdminPage ONLY  <button onClick={handleLogout}>Log Out</button>
+        <div className='admin'>
+            <NavigationBar/>
+
+            {/* <LoadingPageModal loading={applicationLoading} percent={percent}/> */}
 
 
-            <h1>GW Members</h1>
+            
+            <Grid container spacing={2}>
 
-            <LoadingPageModal loading={applicationLoading} percent={percent}/>
-            <div>
-                <select onChange={(e)=> setDropDownVal(e.target.value)} ref={selectLevelRef} name="levels" >
-                    {/* <option value="all">All</option> */}
-                    <option value="1">Level 1</option>
-                    <option value="2">Level 2</option>
-                    <option value="3">Level 3</option>
-                    <option value="4">Level 4</option>
-                </select>
-
-
-                <CashingOutProcess allMembers={members} selectedLvlMembers={selectedLvlMembers()} updateMember={(memberAction) => updateMember(memberAction)}/>
-
-                <QueryMembersList 
-                    allMembers={members}  
-                    handleFilters={handleFilters}
-                    inputFilter={inputFilter}
-                    dropDownVal={dropDownVal}
-                    setInputFilter={setInputFilter}
-                    // queryMembers={queryMembers} 
-                    // selectedLvlMembers={selectedLvlMembers()} 
-                    updateMember={(memberAction) => updateMember(memberAction)} 
-                />
+                
+                <Grid item xs={3}>
+                    <select onChange={(e)=> setDropDownVal(e.target.value)} ref={selectLevelRef} name="levels" >
+                        {/* <option value="all">All</option> */}
+                        <option value="1">Level 1</option>
+                        <option value="2">Level 2</option>
+                        <option value="3">Level 3</option>
+                        <option value="4">Level 4</option>
+                    </select>
 
 
-                <ReferredCounts members={members}/>
-            </div>
+                    <CashingOutProcess allMembers={members} selectedLvlMembers={selectedLvlMembers()} updateMember={(memberAction) => updateMember(memberAction)}/>
+                </Grid>
+
+                <Grid item xs={4}>
+                    <QueryMembersList 
+                        allMembers={members}  
+                        handleFilters={handleFilters}
+                        inputFilter={inputFilter}
+                        dropDownVal={dropDownVal}
+                        setInputFilter={setInputFilter}
+                        // queryMembers={queryMembers} 
+                        selectedLvlMembers={selectedLvlMembers()} 
+                        updateMember={(memberAction) => updateMember(memberAction)} 
+                    />
+                </Grid>
+
+                <Grid item xs={4}>
+                    <ReferredCounts members={members}/>
+                </Grid>
+            </Grid>
 
 
 
