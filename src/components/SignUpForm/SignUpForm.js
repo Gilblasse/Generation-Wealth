@@ -7,7 +7,7 @@ import { db } from '../../config/firebaseApp'
 import FooterCaption from '../FooterCaption'
 import referralCodeGenerator from 'referral-code-generator'
 import {sendWelcomeSMS} from '../../config/SMS/smsActions'
-
+import {seedData} from '../../config/seedData'
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -177,6 +177,9 @@ function SignUpForm (props) {
 
     const handleEnterSubmit = e => {
         if(e.key === "Enter"){
+            console.log(seedData)
+            const newData = seedData
+            debugger
             handleSubmit()
         } 
     }
