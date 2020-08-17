@@ -23,12 +23,12 @@ function ReferredCounts({members}) {
 
     return (
         <div>
-            REFERRED COUNT IS HERE
+            Referrals
             {
                 reduceMembers().map(user => {
 
                     return (
-                        <List>
+                        <List dense>
                             <ListItem>
                                 <Grid container spacing={2}>
                                     <Grid item xs={6}>

@@ -47,7 +47,7 @@ function SignUpForm (props) {
                 break;
 
             case 'cashApp':
-                inputValue = checkCashOutInput(inputValue)
+                // inputValue = checkCashOutInput(inputValue)
                 setCashApp(inputValue)
                 break;
 
@@ -85,13 +85,11 @@ function SignUpForm (props) {
     }
 
     const checkPhoneNumberField = number =>{
-        if(number.length !=0){
             let nonSpaceNums = number.replace(/\D/g,'')
-            let completeNumber = nonSpaceNums.replace(nonSpaceNums.substring(0,1),1)
+            // let completeNumber = nonSpaceNums.replace(nonSpaceNums.substring(0,1),1)
             
-            return completeNumber.split('').slice(0,11).join('')
-        }
-        return number
+            // return completeNumber.split('').slice(0,11).join('')
+        return nonSpaceNums
     }
 
 
@@ -162,11 +160,12 @@ function SignUpForm (props) {
                 
                 const userInfo =  {...newUserInfo.data(), ...userMembership}
                 
+                props.history.push('/thank-you', { id: userID, user: userInfo} )
+                
                 await db().collection('memberships').add(userMembership)
 
                 await sendWelcomeSMS(userInfo)
                 
-                props.history.push('/thank-you', { id: userID, user: userInfo} )
             }
         }else {
             alert("You've Already Registered. Please check your text message Or contact a Generation Wealth Administrator")
@@ -205,7 +204,7 @@ function SignUpForm (props) {
                 </FormControl>
 
                 <FormControl style={{marginBottom: 25}}>
-                    <TextField name='cashApp' onChange={handleChange} helperText="" id="outlined-basic" label="$Cash App" variant="outlined" value={cashApp}/>
+                    <TextField name='cashApp' onChange={handleChange} helperText="" id="outlined-basic" label="$Cash App or PayPal" variant="outlined" value={cashApp}/>
                 </FormControl>
 
                 <FormControl style={{marginBottom: 25}}>
@@ -213,7 +212,7 @@ function SignUpForm (props) {
                 </FormControl>
 
                 <FormControl style={{marginBottom: 25}}>
-                    <TextField type="tel" name="phoneNumber" onChange={handleChange} helperText="" id="outlined-basic" label="Mobile Number" variant="outlined" value={phoneNumber}/>
+                    <TextField type="tel" name="phoneNumber" onChange={handleChange} helperText="" id="outlined-basic" label="(Country Code) - Mobile Number" variant="outlined" value={phoneNumber}/>
                 </FormControl>
                 
                 <Button variant="contained" color="primary" onClick={handleSubmit}>Submit</Button>

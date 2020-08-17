@@ -61,7 +61,7 @@ const useStyles = makeStyles((theme) => ({
     
 
     useEffect(() => {
-        // findAvaliableListNums()
+        findAvaliableListNums()
         setAdminFee(member.adminFee)
         setInvestment(member.investment)
         setCashOut(member.cashOut)
@@ -74,8 +74,10 @@ const useStyles = makeStyles((theme) => ({
 
     useEffect(() => {
         if(editUser){
-            console.log('Finding List nums for LvL: ', level)
-            // setListNumber('')
+            setPhoneNumber(member.phoneNumber)
+            setCashApp(member.cashApp)
+            setName(member.name)
+            level != member.level ? setListNumber('') : setListNumber(member.listNumber)
             findAvaliableListNums()
             getReferredBY()
         }
@@ -107,9 +109,9 @@ const useStyles = makeStyles((theme) => ({
 
 
     const findAvaliableListNums = () => {
-        const allListNums = allMembers.filter(mem => mem.level == level).map(m => +m.listNumber)
+        const allListNums = allMembers.filter(mem => mem.level == level && mem.active == true).map(m => +m.listNumber)
         let availableNums;
-
+        
         if(allListNums.length != 0){
             const maxNum = Math.max(...allListNums) + 1
             let minNum = Math.min(...allListNums) // Starting Point We Can ALSO START AT Zero for a full list of available numbers from 1 - infinity
@@ -139,6 +141,8 @@ const useStyles = makeStyles((theme) => ({
     //     }
     // }
 
+    // const phoneNumberFormat = ()=>{}
+
 
 
     const handleInputChange = (e)=> {
@@ -165,8 +169,8 @@ const useStyles = makeStyles((theme) => ({
     const completedEdit = (done)=>{
         // debugger
         if(listNumber != '' && adminFee != undefined){
-            const membershipFeilds = { listNumber: +listNumber,  level, adminFee, investment, cashOut, phoneNumber, cashApp, name, skipCount}
-            // debugger
+            const membershipFeilds = { listNumber: +listNumber,  level, adminFee, investment, cashOut, phoneNumber, cashApp, name, skipCount, user: member.user}
+            
             updateMember( { type: 'UPDATE ENTRY', payload: {id: member.memberShipID, updating: membershipFeilds, userEdit: done} } )
             setExpanded(false)
         }else{

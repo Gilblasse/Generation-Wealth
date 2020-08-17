@@ -67,7 +67,15 @@ function CashingOutList({ mem, selectedIndex, handleListItemClick, i , updateMem
         updateMember({ 
             type:'UPDATE ENTRY', 
             payload: { 
-                updating: { adminFee, investment, cashOut}, 
+                updating: { 
+                    adminFee, 
+                    investment, 
+                    cashOut,
+                    user: mem.user,
+                    cashApp: mem.cashApp,
+                    name: mem.name,
+                    phoneNumber: mem.phoneNumber
+                }, 
                 id,
                 userEdit: editCheckBoxes
             } 

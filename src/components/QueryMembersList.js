@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import MemeberRow from '../components/MemberRow/MemeberRow'
 import ReactLoading from 'react-loading';
 import { Modal , makeStyles } from '@material-ui/core';
+import { sendingSkipMessages } from '../config/SMS/smsActions';
 // import {db} from '../config/firebaseApp';
 
 function rand() {
@@ -76,7 +77,7 @@ function QueryMembersList({allMembers, handleFilters, inputFilter, dropDownVal, 
         const skipedMemberUpdatedListNum = { listNumber: associatedMembers.splice(-1)[0].listNumber + 1 }
         const {listNumber} = skipMember
         const userMembership = { level, listNumber, user, adminFee: false, cashOut: false, investment: false, active: true, skipCount: 0}
-        const remainingMemberInfo = {name,phoneNumber,cashApp,referralCode,memberShipID }
+        const remainingMemberInfo = {name,phoneNumber,cashApp,referralCode }
         // skipCount: skipMember.skipCount + 1
  
         updateMember({ 
@@ -89,6 +90,20 @@ function QueryMembersList({allMembers, handleFilters, inputFilter, dropDownVal, 
 
         handleModalClose()
         setExpanded(false)
+
+        sendingSkipMessages({
+            skipMember: {
+                ...skipedMemberUpdatedListNum, 
+                level: skipMember.level, 
+                phoneNumber: skipMember.phoneNumber
+            },
+
+            auctionWinner: {
+                listNumber: skipMember.listNumber,
+                level: targetMember.level,
+                phoneNumber: targetMember.phoneNumber
+            } 
+        })
     }
 
     const skipMemberToBottom = ()=> {
@@ -110,6 +125,21 @@ function QueryMembersList({allMembers, handleFilters, inputFilter, dropDownVal, 
         updateMember({ type: 'BULK UPDATE' , payload: updateEntries })
         handleModalClose()
         setExpanded(false)
+
+        debugger
+        sendingSkipMessages({
+            skipMember: {
+                ...skipedMemberUpdatedListNum, 
+                level: skipMember.level, 
+                phoneNumber: skipMember.phoneNumber
+            },
+
+            auctionWinner: {
+                ...targetUpdatedListNum,
+                level: targetMember.level,
+                phoneNumber: targetMember.phoneNumber
+            } 
+        })
     }
 
 

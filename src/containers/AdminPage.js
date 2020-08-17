@@ -68,7 +68,7 @@ function AdminPage(props) {
         for(const membershipDoc of membershipRef.docs){
             // <LoadingPageModal percent={Math.floor((membersArr.length / total) * 100)}/>
             const membershipData = membershipDoc.data()
-            
+            // debugger
             const userDoc = await db().collection('users').doc(membershipData.user).get()
             const user = userDoc.data()
             const memberInfo = {...membershipData, memberShipID: membershipDoc.id, ...user, userID: userDoc.id}
@@ -85,39 +85,37 @@ function AdminPage(props) {
 
   
 
-    useEffect(() =>{
-        console.log('MEMBERS UPDATED SIZE => ', members.length)
-        console.log('MEMBERS UPDATED => ', members)
-        // selectedLvlMembers()
-    },[members])
+    // useEffect(() =>{
+    //     console.log('MEMBERS UPDATED SIZE => ', members.length)
+    //     console.log('MEMBERS UPDATED => ', members)
+    //     // selectedLvlMembers()
+    // },[members])
    
-
-    // // ADMIN LOG OUT SECTION
-    // const handleLogout = ()=>{
-    //     auth().signOut()
-    //     props.history.push('/gw-admin')
-    // }
 
 
     // FILTERS SECTION
     const handleFilters = (queryDropDownVal) => {
-        console.log('Query Members List Calling ON Hanldle Filter')
-        console.log('Members Size Querying on => ', members.length)
-        console.log('Members Querying on => ', members)
 
         let copyofMembers = [...members] 
+        const query = inputFilter.toUpperCase()
         let memberResults;
 
         if(inputFilter != ''){
             if(isNumber(inputFilter)){
-                memberResults = copyofMembers.filter(member => +member.listNumber === +inputFilter)
+                // debugger
+                const byPhone = copyofMembers.filter(e => e?.phoneNumber?.toUpperCase()?.indexOf(query) > -1 )
+                const byListNumber = copyofMembers.filter(e => +e.listNumber === +inputFilter)
+                const numberQueries = [...byPhone,...byListNumber] 
+                const numberQueryResults = {};
+
+                memberResults = numberQueries.filter(member => !numberQueryResults[member['memberShipID']] && (numberQueryResults[member['memberShipID']] = true) )
     
             }else{
-                const query = inputFilter.toUpperCase()
-                const byName = copyofMembers.filter(member => member.name.toUpperCase().indexOf(query) > -1 )
-                const byCashApp = copyofMembers.filter(member => member.cashApp.toUpperCase().indexOf(query) > -1 )
-                const byPhone = copyofMembers.filter(member => member.phoneNumber.toUpperCase().indexOf(query) > -1 )
-                const membersQuerys = [...byName,...byCashApp,...byPhone] 
+                // const query = inputFilter.toUpperCase()
+                const byName = copyofMembers.filter(member => member?.name?.toUpperCase()?.indexOf(query) > -1 )
+                const byCashApp = copyofMembers.filter(member => member?.cashApp?.toUpperCase()?.indexOf(query) > -1 )
+                // const byPhone = copyofMembers.filter(member => member.phoneNumber.toUpperCase().indexOf(query) > -1 )
+                const membersQuerys = [...byName,...byCashApp] 
                 const membersQueryResults = {};
     
                 memberResults = membersQuerys.filter(member => !membersQueryResults[member['memberShipID']] && (membersQueryResults[member['memberShipID']] = true) )
@@ -126,10 +124,8 @@ function AdminPage(props) {
             memberResults = [...members]
         }
 
-        // const sameLevel = memberResults.filter(e => e.level === queryDropDownVal).filter(e=> e.active == true)
-        // const sortedOnSameLvl = sameLevel.sort((a,b) =>  (+a.listNumber < +b.listNumber) ? -1 : (+a.listNumber > +b.listNumber) ? 1 : 0 )
         const filteredMembers = selectedLvlMembers(memberResults, queryDropDownVal)()
-        // console.log('Handle Filter Returns MEMBERS => ', sortedOnSameLvl)
+
         return filteredMembers
     }
 
@@ -150,17 +146,48 @@ function AdminPage(props) {
         await db().collection('memberships').add(entry)
     }
 
-    const updateMembersInfo = async (id, data) => {
-        await db().collection('memberships').doc(id).update(data)
+    const updateMembersInfo = async ({membershipId, userId}, {memberShipData, userData}) => {
+        await db().collection('memberships').doc(membershipId).update(memberShipData)
+        await db().collection('users').doc(userId).update(userData)
     }
 
-   const cashingOutDB = async (arrOfEntries) => {
+    const updateAndNewEntry = async ({update, newEntry, userInfo},updateMemObj, leftovers) => {
+        debugger
+        await db().collection('memberships').doc(update.id).update(update.data)
+        const newMembershipEntry = await db().collection('memberships').add(newEntry)
+
+        const newEntryDoc = await newMembershipEntry.get()
+        const newEntryData = newEntryDoc.data()
+
+        const updatedNewEntry = {memberShipID: newEntryDoc.id, ...newEntryData, ...userInfo}
+        
+       setMembers([...leftovers, updatedNewEntry, updateMemObj])
+    }
+
+
+
+   const cashingOutDB = async (arrOfEntries, reaminingMembers) => {
+       let updatedEntries = []
+       let count = 0 
+
        for(const entry of arrOfEntries){
-           const {deactivateMemeber: id, newEntryCurrentLVL, newLvlListNum } = entry
-            await db().collection('memberships').doc(id).update({active: false})
-            await db().collection('memberships').add(newEntryCurrentLVL)
-            await db().collection('memberships').add(newLvlListNum)
+           const {deactivateMemeber: id, newEntryCurrentLVL, newLvlListNum, remainingMemberInfo } = entry
+            const membershipInfo = await db().collection('memberships').doc(id).update({active: false})
+
+        //     // Retrive New Entry IDs HERE
+           const oldLVLEntry = await db().collection('memberships').add(newEntryCurrentLVL)
+           const newLVLEntry =  await db().collection('memberships').add(newLvlListNum)
+           const oldLvlEntryDoc = await oldLVLEntry.get()
+           const newLVLEntryDoc = await newLVLEntry.get()
+           const oldData = oldLvlEntryDoc.data()
+           const newData = newLVLEntryDoc.data()
+           
+           const newEntryOldLVL = {memberShipID: oldLvlEntryDoc.id, ...oldData, ...remainingMemberInfo}
+           const newEntryNewLVL = {memberShipID: newLVLEntryDoc.id, ...newData, ...remainingMemberInfo}
+        
+            updatedEntries.push(newEntryOldLVL,newEntryNewLVL)
        }
+       setMembers([...reaminingMembers, ...updatedEntries])
    }
     
 
@@ -174,7 +201,14 @@ function AdminPage(props) {
         }
     }
 
-
+    const addedNewMemberShipEntry = async (payload) => {
+        const newMembershipEntry = await db().collection('memberships').add(payload.newEntry)
+        const newEntryDoc = await newMembershipEntry.get()
+        const newEntryData = newEntryDoc.data()
+        const updatedNewEntry = {memberShipID: newEntryDoc.id, ...newEntryData, ...payload.userInfo}
+            
+        setMembers([...members, updatedNewEntry])
+    }
 
 
 
@@ -186,55 +220,54 @@ function AdminPage(props) {
             case 'CASHINGOUT':
                 let updatedMems = []
                 let cashingOutDBarr = []
-                // let prepareMessages = []
                 const cashOutIDS = payload.map(mem => mem.deactivateMemeber.id)
                 const reaminingMembers = members.filter(mem => !cashOutIDS.includes( mem.memberShipID ) )
-
+                let count = 0
                 
-                payload.forEach( memberUpdate => {
-                    const {deactivateMemeber, newEntryCurrentLVL, newLvlListNum, remainingMemberInfo} = memberUpdate
-                    const bottomOfListLVLs = [{...newEntryCurrentLVL, ...remainingMemberInfo}, {...newLvlListNum, ...remainingMemberInfo} ]
-                    // prepareMessages[] 
-                    updatedMems.push(...bottomOfListLVLs)
-                    // DB Actions
-                    cashingOutDBarr.push({deactivateMemeber: deactivateMemeber.id, newEntryCurrentLVL, newLvlListNum})
+                payload.forEach( (memberUpdate, increment) => {
+                    let {deactivateMemeber, newEntryCurrentLVL, newLvlListNum, remainingMemberInfo} = memberUpdate
+                    newEntryCurrentLVL = {...newEntryCurrentLVL, listNumber: newEntryCurrentLVL.listNumber + increment}
+                    newLvlListNum = {...newLvlListNum, listNumber: newLvlListNum.listNumber + increment }
+                    
+                    cashingOutDBarr.push({deactivateMemeber: deactivateMemeber.id, newEntryCurrentLVL, newLvlListNum, remainingMemberInfo})
                 })
 
-                
-                updatedQueryArr.push(...reaminingMembers, ...updatedMems)
-                cashingOutDB(cashingOutDBarr)
-                // sendCashingOutSMS(cashingOutDBarr)
+                cashingOutDB(cashingOutDBarr, reaminingMembers)
             break;
             
 
             case 'UPDATE ENTRY':  
-                // debugger      
                 let currentMEM = {}
+
                 const updatedMembers = members.map(mem => {
-                    if(mem.memberShipID === payload.id){
-                        mem = { ...mem, ...payload.updating }
-                        currentMEM = mem
+                    if(mem.user == payload.updating.user){
+                        mem = {...mem, cashApp: payload.updating.cashApp, name: payload.updating.name, phoneNumber: payload.updating.phoneNumber}
+                        
+                        if(mem.memberShipID === payload.id){
+                            mem = { ...mem, ...payload.updating }
+                            currentMEM = mem
+                        }
                     }
                    return mem
                 })
+
                 
-                let {active, adminFee, cashOut, investment, level, listNumber, skipCount} = currentMEM
+                let {active, adminFee, cashOut, investment, level, listNumber, phoneNumber, cashApp, name, skipCount, user} = currentMEM
                 skipCount = skipCount || 0
-                let updateData = {active, adminFee, cashOut, investment, level, listNumber, skipCount}
-                // debugger
-                updatedQueryArr = [...updatedMembers]
+
+                let updateData = {memberShipData: {active, adminFee, cashOut, investment, level, listNumber, skipCount}, userData: {phoneNumber, cashApp, name} }
+
+                setMembers([...updatedMembers])
 
                 // db Actions
                 if(payload.userEdit){
-                    updateMembersInfo(payload.id, updateData)
+                    updateMembersInfo({membershipId: payload.id, userId: user}, updateData)
                 } 
             break;
 
     
             case 'ADD NEW ENTRY':
-               updatedQueryArr = [...members, {...payload.newEntry, ...payload.userInfo}]
-                // db Actions
-                addedNewEntry(payload.newEntry)
+                addedNewMemberShipEntry(payload)
             break
 
 
@@ -243,12 +276,8 @@ function AdminPage(props) {
                 const memObj = members.find(e=> e.memberShipID === payload.update.id)
                 const updateMemObj = {...memObj, ...payload.update.data}
                 const leftOvers = members.filter(e=> e.memberShipID != payload.update.id)
-                const newEntryInfo = {...payload.newEntry, ...payload.userInfo}
-                
-                updatedQueryArr = [...leftOvers, newEntryInfo, updateMemObj]
-                
-                addedNewEntry(payload.newEntry)
-                updateMembersInfo(payload.update.id, payload.update.data)
+
+                updateAndNewEntry({update: {id: payload.update.id, data: payload.update.data} ,newEntry: payload.newEntry, userInfo: payload.userInfo}, updateMemObj,leftOvers)
             break;
 
 
@@ -262,8 +291,8 @@ function AdminPage(props) {
                     entry = members.find(m => m.memberShipID == e.id)
                     entry && currentEntries.push({...entry, ...e.updating})
                 })
-                debugger
-                updatedQueryArr = [...restOfMembers,...currentEntries]
+                
+                setMembers([...restOfMembers,...currentEntries])
 
                 updateBulkEntries(currentEntries)
             break;
@@ -273,7 +302,7 @@ function AdminPage(props) {
             break;
         }
 
-        setMembers(updatedQueryArr)
+        // setMembers(updatedQueryArr)
     }
 
 
@@ -302,7 +331,7 @@ function AdminPage(props) {
                     </select>
 
 
-                    <CashingOutProcess allMembers={members} selectedLvlMembers={selectedLvlMembers()} updateMember={(memberAction) => updateMember(memberAction)}/>
+                    <CashingOutProcess allMembers={members} selectLevelRef={selectLevelRef} selectedLvlMembers={selectedLvlMembers()} updateMember={(memberAction) => updateMember(memberAction)}/>
                 </Grid>
 
                 <Grid item xs={4}>
