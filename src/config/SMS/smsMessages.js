@@ -1,15 +1,16 @@
 export const welcomeMessage = (name) => {
-    return `
-    Welcome ${name} to GW ‼️
-    When your $100 is needed (or you are up for cash out) you will be texted through this automated system. 🗣
-
-    1st STEPS:
-    1. Please put your List number next to your name on telegram (not your username) Go to settings, edit, and change it there 
-    2. Join this thread for important updates: https://t.me/joinchat/AAAAAE_Lit5NNg2UM2hMRQ
-    3. PAYMENTS & CashOuts: https://t.me/joinchat/AAAAAFfektr0mg3I-RFljg
-    4. Join The secret chat: https://t.me/joinchat/SOoNHxrV9kHOzA1o45YdDw
+    return `Welcome to GW ‼️
+    We are so excited to meet you ❤️
     
-    🚨Remember to pop in at least once a day or so esp when it’s your turn. If we can’t contact you and it’s your turn to pay someone out we WILL skip you!! If this happens you have to go to the bottom of the list🚨
+    When your $100 is needed (or you are up for cash out) you will be texted through this automated system. 🗣
+    
+    1st STEPS:
+    
+    1. Download the Telegram App & Please put this number next to your name (not your username) Go to settings, edit, and change it there 
+    
+    2. Make sure you finished this survery: https://docs.google.com/forms/d/1qXk1x83-f2P7WaSdr-AJPXnsN55opdqvclznb4EbjnM
+    
+    3. After downloading the Telegram App - Join this chat for the next instructions: https://t.me/joinchat/SOoNHxfjhUIrjJg75UJTPQ
    `
 }  
 
@@ -40,4 +41,22 @@ export const cashingOutMessage = (name,oldLvl,oldLvlNewListNum, newLvl, newLvlNe
         Level: ${oldLvl} => List Number: ${oldLvlNewListNum} \n
         Level: ${newLvl} => List Number: ${newLvlNewListNum}
     `
+}
+
+
+export const skipMessage = (lvl,listNum) => {
+    return`Due to inactivity and not being present when we called on you for your payment..
+     You have been skipped. If this happens again we will have to let you go. 
+     Please hold onto this new number and answer when we reach out for you to pay
+     
+     BELOW IS YOUR UPDATED INFO:
+     Level: ${lvl} => List Number: ${listNum}`
+
+}
+
+
+export const wonAuctionMessage = (lvl,listNum) => {
+    return `You won the auction
+     and your New Entry is:
+     Level: ${lvl} => List Number: ${listNum}`
 }

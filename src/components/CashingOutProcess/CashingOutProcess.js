@@ -1,21 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react'
-import {Grid, List, ListItem, ListItemIcon, ListItemText, Card, CardActions, CardContent, Button, Typography, makeStyles,Divider} from '@material-ui/core'
+import {Grid, List, ListItem, ListItemIcon, ListItemText, Card, CardActions, CardContent, Button, Typography, makeStyles,Divider,
+CardHeader, Avatar, IconButton} from '@material-ui/core'
 import { sendCashingOutSMS } from '../../config/SMS/smsActions';
 import CashingOutList from './CashingOutList';
 import {sendingSelectedCashOutSMS, sendingInvestorsSMS} from '../../config/SMS/smsActions'
 import './CashingOutProcess.css'
-
+import MoreVertIcon from '@material-ui/icons/MoreVert';
+import InvestorsList from './InvestorsList/InvestorsList'
 
 
 const useStyles = makeStyles({
     root: {
       minWidth: 275,
       height: 250
-    },
-    bullet: {
-      display: 'inline-block',
-      margin: '0 2px',
-      transform: 'scale(0.8)',
     },
     title: {
       fontSize: 14,
@@ -28,27 +25,25 @@ const useStyles = makeStyles({
 
 
 
-function CashingOutProcess({selectedLvlMembers, allMembers, updateMember}) {
+function CashingOutProcess({selectedLvlMembers, allMembers, updateMember, selectLevelRef}) {
 
     const selectionNumbers = [1,2,3,4,5,6,7,8,9,10]
     const [numOfCashOuts, setNumOfCashOuts] = useState(1)
     const [selectedIndex, setSelectedIndex] = React.useState(1);
+    const [entryID, setEntryID] = useState()
     const [investors, setInvestors] = useState([]);
     const [findInvestors, setfindInvestors] = useState({})
     const [isCashingOut, setIsCashingOut] = useState(false)
     const [isSendingNotifications, setIsSendingNotifications] = useState(false)
-    // const [editCheckBoxes , setEditCheckBoxes ] = useState(false)
-    // const adminRef = useRef()
-    // const [adminFee, setAdminFee] = useState()
-    // const [investment, setInvestment] = useState()
-    // const [cashOut, setCashOut] = useState()
 
-    // useEffect(() => {
-    //     // setSelectedIndex(0)
-    //     setInvestors( findInvestors[selectedLvlMembers()[0]?.memberShipID] )
-    // },[findInvestors])
 
     const classes = useStyles();
+
+    useEffect(()=>{
+        if(entryID && selectedIndex){
+            handleListItemClick(null, selectedIndex, entryID)
+        }
+    },[allMembers,numOfCashOuts, selectLevelRef])
 
     useEffect(() => {
         if(isCashingOut){
@@ -61,7 +56,7 @@ function CashingOutProcess({selectedLvlMembers, allMembers, updateMember}) {
     }, [numOfCashOuts, selectedLvlMembers])
 
 
-
+    
     const findBottomOfList = (lvl) => {
        const presentMembers = allMembers.filter(mem => mem.level == lvl)
 
@@ -78,6 +73,7 @@ function CashingOutProcess({selectedLvlMembers, allMembers, updateMember}) {
 
     const handleListItemClick = (event, index, memberShipID) => {
         setSelectedIndex(index);
+        setEntryID(memberShipID)
         setInvestors(findInvestors[memberShipID])
     };
 
@@ -126,7 +122,7 @@ function CashingOutProcess({selectedLvlMembers, allMembers, updateMember}) {
                 if(adminFee && investment && cashOut){  
                     const bottomListNumCurrentLVL = findBottomOfList(level)
                     let newEntryCurrentLVL = {adminFee: false, investment: true, cashOut: false, listNumber: bottomListNumCurrentLVL, level , user, active: true, skipCount: 0}
-                    let remainingMemberInfo = {name,phoneNumber,cashApp,referralCode,memberShipID }
+                    let remainingMemberInfo = {name,phoneNumber,cashApp,referralCode } //memberShipID
                     let deactivateMemeber = {id: memberShipID}
                     let newLvlListNum;
                     let newBottomListNum;
@@ -175,13 +171,13 @@ function CashingOutProcess({selectedLvlMembers, allMembers, updateMember}) {
         // debugger
         setIsCashingOut(false)
         cashoutUpdates.length != 0 && updateMember( { type: 'CASHINGOUT', payload: cashoutUpdates } )
-        debugger
+        // debugger
         cashoutUpdates.length != 0 && sendCashingOutSMS(cashoutUpdates)
     }
 
 
     const handleSendNotification = async ()=>{
-        // await sendingSelectedCashOutSMS(selectedLvlMembers().slice(0,numOfCashOuts))
+        await sendingSelectedCashOutSMS(selectedLvlMembers().slice(0,numOfCashOuts))
         
         await sendingInvestorsSMS(Object.values(findInvestors).flat())
     }
@@ -247,13 +243,13 @@ function CashingOutProcess({selectedLvlMembers, allMembers, updateMember}) {
                 {/*=============  INVESTORS RESPONSIBLE FOR PAYING CASHING OUT MEMBERS  =======*/}
                 
                 <Grid item>
-                     <Card className={classes.root} classeName='cashingOutProcess__listContainer'>
+                     <Card className={classes.root} className='cashingOutProcess__listContainer'>
                         <CardContent>
                             <Typography variant="h6">
-                                Investors Paying Cashing Out Members
+                                Paying Cashing Out Members
                             </Typography>
                             <Divider />
-                                <List component="nav" dense className='cashingOutProcess__listOfInvestors'>
+                                <List component="nav" dense style={{height: '130px', overflowY: 'scroll', overflowX: 'hidden'}}>
                                     {   
                                         selectedLvlMembers().length != 0 && (
                                             (
@@ -263,23 +259,7 @@ function CashingOutProcess({selectedLvlMembers, allMembers, updateMember}) {
                                                     {
                                                     investors.slice(0,-2).map(investor => {
                                                         return (
-                
-                                                            <ListItem>
-                                                                <ListItemText primary={
-                                                                    <>
-                                                                        <ListItemIcon>
-                                                                        {investor?.listNumber}.
-                                                                        </ListItemIcon>
-                                                                        {investor?.name}
-                                                                    </>
-                                                                } />
-
-   
-                                                                <ListItemIcon>
-                                                                    {investor?.cashApp}
-                                                                </ListItemIcon>
-                                                            </ListItem>
-                
+                                                            <InvestorsList investor={investor} numOfCashOuts={numOfCashOuts} updateMember={updateMember} allMembers={allMembers} updateMember={updateMember} selectLevelRef={selectLevelRef}/>
                                                         )
                                                     })
                                                     }
@@ -316,23 +296,7 @@ function CashingOutProcess({selectedLvlMembers, allMembers, updateMember}) {
                                                     {
                                                     investors.slice(-2).map(investor => {
                                                         return (
-                
-                                                            <ListItem>
-                                                                <ListItemText primary={
-                                                                    <>
-                                                                        <ListItemIcon>
-                                                                        {investor?.listNumber}.
-                                                                        </ListItemIcon>
-                                                                        {investor?.name}
-                                                                    </>
-                                                                } />
-
-   
-                                                                <ListItemIcon>
-                                                                    {investor?.cashApp}
-                                                                </ListItemIcon>
-                                                            </ListItem>
-                
+                                                            <InvestorsList investor={investor} updateMember={updateMember}/>
                                                         )
                                                     })
                                                     }
