@@ -32,7 +32,7 @@ const useStyles = makeStyles((theme) => ({
       backgroundColor: 'grey'
     },
     columnOdd:{
-      backgroundColor: '#F0F0F0'
+      backgroundColor: '#f1f3f4'
     }
   
   }));
@@ -70,7 +70,7 @@ const useStyles = makeStyles((theme) => ({
         setCashApp(member.cashApp)
         setName(member.name)
         getReferredBY()
-    }, [])
+    }, [])  
 
     useEffect(() => {
         if(editUser){
@@ -368,6 +368,11 @@ const useStyles = makeStyles((theme) => ({
                    <Grid item className={classes.columnOdd} xs={6}>Referred BY</Grid>
                    <Grid item className={classes.columnOdd} xs={6}> 
                        { referredBY }
+                   </Grid>
+
+                   <Grid item className={classes.columnOdd} xs={6}>Referral Code</Grid>
+                   <Grid item className={classes.columnOdd} xs={6}> 
+                       {  member.user }
                    </Grid>
 
                    {/* <Grid item className={classes.columnOdd} xs={6}>Skiped</Grid>

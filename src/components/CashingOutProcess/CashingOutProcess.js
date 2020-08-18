@@ -11,7 +11,7 @@ import InvestorsList from './InvestorsList/InvestorsList'
 
 const useStyles = makeStyles({
     root: {
-      minWidth: 275,
+      minWidth: 175,
       height: 250
     },
     title: {
@@ -85,7 +85,6 @@ function CashingOutProcess({selectedLvlMembers, allMembers, updateMember, select
     
     const getAssociatedInvestors = ()=>{
         const cashingOut = selectedLvlMembers().slice(0,numOfCashOuts)
-        
         const investorsArry = []
         const dict = {}
       
@@ -94,7 +93,7 @@ function CashingOutProcess({selectedLvlMembers, allMembers, updateMember, select
        
         for (const mem in cashingOut){
           sum = num + 7
-          investorsArry.push(selectedLvlMembers().slice(num, sum))
+          investorsArry.push(selectedLvlMembers().slice(356).slice(num, sum))
       
           num = sum
         }
@@ -221,35 +220,43 @@ function CashingOutProcess({selectedLvlMembers, allMembers, updateMember, select
 {/* setIsSendingNotifications(true) */}
 
 
-            <Grid container direction="column" spacing={2}>
+            <Grid container spacing={2}>
 
 
                 {/*=============  CASHING OUT MEMBERS  =======*/}
-                <Grid item>
-                    <List component="nav">
-                        {
-                            selectedLvlMembers().slice(0,numOfCashOuts).map((mem,i) => {
-                                return (
-                                
-                                    <CashingOutList mem={mem} selectedIndex={selectedIndex} handleListItemClick={handleListItemClick} i={i} updateMember={updateMember}/>
-                                
-                                )
-                            })
-                        }
-                    </List>
+                <Grid item xs={12} lg={5}>
+                    <Card className={classes.root} className='cashingOutProcess__listContainer'>
+                        <CardContent>
+                            <Typography variant="body1">
+                                Cashing Out
+                            </Typography>
+                            <Divider />
+                            <List component="nav" dense style={{height: '180px', overflow: 'scroll'}}>
+                                {
+                                    selectedLvlMembers().slice(0,numOfCashOuts).map((mem,i) => {
+                                        return (
+                                        
+                                            <CashingOutList mem={mem} selectedIndex={selectedIndex} handleListItemClick={handleListItemClick} i={i} updateMember={updateMember}/>
+                                        
+                                        )
+                                    })
+                                }
+                            </List>
+                        </CardContent>
+                    </Card>
                 </Grid>
 
 
                 {/*=============  INVESTORS RESPONSIBLE FOR PAYING CASHING OUT MEMBERS  =======*/}
                 
-                <Grid item>
+                <Grid item xs={12} lg={4}>
                      <Card className={classes.root} className='cashingOutProcess__listContainer'>
                         <CardContent>
-                            <Typography variant="h6">
+                            <Typography variant="body1">
                                 Paying Cashing Out Members
                             </Typography>
                             <Divider />
-                                <List component="nav" dense style={{height: '130px', overflowY: 'scroll', overflowX: 'hidden'}}>
+                                <List component="nav" dense style={{height: '180px', overflow: 'scroll'}}>
                                     {   
                                         selectedLvlMembers().length != 0 && (
                                             (
@@ -279,14 +286,14 @@ function CashingOutProcess({selectedLvlMembers, allMembers, updateMember, select
                 
                 {/*=============  INVESTORS RESPONSIBLE FOR PAYING GW  =======*/}
 
-                <Grid item>
-                     <Card className={classes.root}>
+                <Grid item xs={12} lg={3}>
+                     <Card className={classes.root} className='cashingOutProcess__listContainer'>
                         <CardContent>
-                            <Typography variant="h6">
-                                Paying Generational Wealth
+                            <Typography variant="body1">
+                                Paying Generational Wealth  
                             </Typography>
                             <Divider />
-                                <List component="nav" dense>
+                                <List component="nav" dense style={{height: '180px', overflow: 'scroll'}}>
                                     {   
                                         selectedLvlMembers().length != 0 && (
                                             (

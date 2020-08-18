@@ -1,6 +1,17 @@
 import React, { useState, useEffect } from 'react'
-import {Grid, List, ListItem, ListItemIcon, ListItemText, Tooltip, Checkbox} from '@material-ui/core'
+import {Grid, List, ListItem, ListItemIcon, CardHeader, IconButton, ListItemText, makeStyles, Tooltip, Checkbox} from '@material-ui/core'
 
+
+
+const useStyles = makeStyles( theme => ({
+    root: {
+        padding: 0
+      },
+    small: {
+        minWidth: theme.spacing(5),
+        height: theme.spacing(5),
+    },
+}));
 
 
 
@@ -12,6 +23,7 @@ function CashingOutList({ mem, selectedIndex, handleListItemClick, i , updateMem
     const [investment, setInvestment] = useState(mem.investment)
     const [cashOut, setCashOut] = useState(mem.cashOut)
     const [buttonText, setButtonText] = useState('Edit')
+    const classes = useStyles();
 
 
     useEffect(()=>{
@@ -98,7 +110,9 @@ function CashingOutList({ mem, selectedIndex, handleListItemClick, i , updateMem
 
 
     return (
+        
         <ListItem button selected={selectedIndex === i} onClick={(event) => handleListItemClick(event, i, mem.memberShipID)}>
+
             <ListItemIcon>
                 {mem.listNumber}.
             </ListItemIcon>

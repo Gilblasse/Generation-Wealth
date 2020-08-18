@@ -128,7 +128,7 @@ function SignUpForm (props) {
 
 
     const isUserInDB = async ()=> {
-        const user = await db().collection('users').where('cashApp','==', cashApp).get()
+        const user = await db().collection('users').where('name','==',name).where('cashApp','==', cashApp).get()
         return user.docs.length == 0 ? false : true
     }
 
@@ -177,12 +177,120 @@ function SignUpForm (props) {
 
     const handleEnterSubmit = e => {
         if(e.key === "Enter"){
-            console.log(seedData)
-            const newData = seedData
-            debugger
+            // console.log(seedData)
+            // const newData = seedData
+            // uploadEntries(newData)
             handleSubmit()
+            // updateCashOutEntries()
         } 
+    } 
+
+
+
+    const uploadEntries = async(newData)=>{
+        // debugger
+        const seedInfo = newData.map( d=> {
+            return (
+                {
+                    name: d.name, 
+                    phoneNumber: d.phoneNumber, 
+                    cashApp: d.cashApp, 
+                    refBy: d["Referred by"]?.replace(/\D/g,''),
+                    listNumber: +d["#"], 
+                    adminFee: d.adminFee, 
+                    investment: d.investment, 
+                    cashOut: d.cashOut, 
+                    notes: d["Notes- Telegram Name"]
+                }
+            )
+        })
+
+        let count = 0
+        const total = seedInfo.length
+        console.log('Total: ', seedInfo.length)
+       
+        for(const data of seedInfo){
+            let {name, phoneNumber, cashApp, refBy, notes} = data
+            let {listNumber, adminFee, investment, cashOut} = data
+            
+            refBy = refBy || ""
+            phoneNumber = phoneNumber || ""
+            notes = notes || ""
+            cashApp = cashApp || ""
+            cashOut = (cashOut == 'TRUE')
+            adminFee = (adminFee == 'TRUE')
+            investment = (investment == 'TRUE')
+            const isUser = await db().collection('users').where('name','==',name).where('cashApp','==',cashApp).get()
+
+            if(isUser.docs.length == 0){
+                const newUser = await db().collection('users').add({name, phoneNumber, cashApp, refBy, notes})
+                const newUserDocs = await newUser.get()
+                const userID = newUserDocs.id
+                await db().collection('memberships').add({listNumber, level: 1, adminFee, investment, cashOut, active: !cashOut, skipCount: 0, user: userID})
+            }else{
+                const userid = isUser.docs[0].id
+                await db().collection('memberships').add({listNumber, level: 1, adminFee, investment, cashOut, active: !cashOut, skipCount: 0, user: userid })
+            }
+            console.log('Entries Completed: ', count)
+            count += 1
+        }
+
+        console.log('Starting to Update USers Referal Codes')
+        updateUsers()
     }
+
+
+    const updateUsers = async () => {
+        const usersRef =  await db().collection('users').get()
+        const userDocs = usersRef.docs
+        let count = 0
+
+        for(const doc of userDocs){
+            const userData = doc.data()
+            let num = userData.refBy || ""
+
+            const entryRef = await db().collection('memberships').where('listNumber','==',+num).get()
+            const entryDocs = entryRef.docs
+            
+            if (entryDocs.length != 0){
+                const referrer = entryDocs[0].data().user
+                console.log('Matched')
+                await db().collection('users').doc(doc.id).update({referralCode: referrer})
+            }
+            console.log(count)
+            count++
+        }
+
+        console.log('Updating CashOuts')
+        updateCashOutEntries()
+    }
+
+
+
+    const updateCashOutEntries = async () => {
+        const entryRef = await db().collection('memberships').where('cashOut','==',true).get()
+        let lvlOneCount = 520
+        let lvlTwoCount = 1
+        const entryDocs = entryRef.docs
+        let position = 0
+
+        for(const doc of entryDocs){
+            const user = doc.data().user
+            const levelOneData = {level: 1, listNumber: lvlOneCount, skipCount: 0, adminFee: false, investment: false, cashOut: false, active: true, user}
+            const levelTwoData = {level: 2, listNumber: lvlTwoCount, skipCount: 0, adminFee: false, investment: false, cashOut: false, active: true, user}
+
+            await db().collection('memberships').add(levelOneData)
+            await db().collection('memberships').add(levelTwoData)
+
+            lvlOneCount += 1
+            lvlTwoCount += 1
+            position += 1
+            console.log('cashOut', position)
+        }
+        
+        console.log('Completed...')
+    }
+
 
 
 

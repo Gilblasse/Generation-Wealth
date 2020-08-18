@@ -66,9 +66,7 @@ function AdminPage(props) {
         console.log('Getting All Entries: ', total)
         
         for(const membershipDoc of membershipRef.docs){
-            // <LoadingPageModal percent={Math.floor((membersArr.length / total) * 100)}/>
             const membershipData = membershipDoc.data()
-            // debugger
             const userDoc = await db().collection('users').doc(membershipData.user).get()
             const user = userDoc.data()
             const memberInfo = {...membershipData, memberShipID: membershipDoc.id, ...user, userID: userDoc.id}
@@ -317,41 +315,49 @@ function AdminPage(props) {
             {/* <LoadingPageModal loading={applicationLoading} percent={percent}/> */}
 
 
-            
-            <Grid container spacing={2}>
-
+            <div style={{backgroundColor: '#f3f3f3'}}>
+                <Grid container spacing={2}>
                 
-                <Grid item xs={3}>
-                    <select onChange={(e)=> setDropDownVal(e.target.value)} ref={selectLevelRef} name="levels" >
-                        {/* <option value="all">All</option> */}
-                        <option value="1">Level 1</option>
-                        <option value="2">Level 2</option>
-                        <option value="3">Level 3</option>
-                        <option value="4">Level 4</option>
-                    </select>
+                <Grid item xs={9}>
+                        <Grid container direction="column" spacing={3}>
+                            
+                            <Grid item xs={12}>
+                                <select onChange={(e)=> setDropDownVal(e.target.value)} ref={selectLevelRef} name="levels" >
+                                    <option value="1">Level 1</option>
+                                    <option value="2">Level 2</option>
+                                    <option value="3">Level 3</option>
+                                    <option value="4">Level 4</option>
+                                </select>
 
 
-                    <CashingOutProcess allMembers={members} selectLevelRef={selectLevelRef} selectedLvlMembers={selectedLvlMembers()} updateMember={(memberAction) => updateMember(memberAction)}/>
+                                <CashingOutProcess allMembers={members} selectLevelRef={selectLevelRef} selectedLvlMembers={selectedLvlMembers()} updateMember={(memberAction) => updateMember(memberAction)}/>
+                            </Grid>
+
+
+                            <Grid item xs={12}>
+                                <QueryMembersList 
+                                    allMembers={members}  
+                                    handleFilters={handleFilters}
+                                    inputFilter={inputFilter}
+                                    dropDownVal={dropDownVal}
+                                    setInputFilter={setInputFilter}
+                                    // queryMembers={queryMembers} 
+                                    selectedLvlMembers={selectedLvlMembers()} 
+                                    updateMember={(memberAction) => updateMember(memberAction)} 
+                                />
+                            </Grid>
+
+                        </Grid>
                 </Grid>
+                
 
-                <Grid item xs={4}>
-                    <QueryMembersList 
-                        allMembers={members}  
-                        handleFilters={handleFilters}
-                        inputFilter={inputFilter}
-                        dropDownVal={dropDownVal}
-                        setInputFilter={setInputFilter}
-                        // queryMembers={queryMembers} 
-                        selectedLvlMembers={selectedLvlMembers()} 
-                        updateMember={(memberAction) => updateMember(memberAction)} 
-                    />
+                    
+
+                    <Grid item xs={3}>
+                        <ReferredCounts members={members}/>
+                    </Grid>
                 </Grid>
-
-                <Grid item xs={4}>
-                    <ReferredCounts members={members}/>
-                </Grid>
-            </Grid>
-
+            </div>
 
 
         </div>
