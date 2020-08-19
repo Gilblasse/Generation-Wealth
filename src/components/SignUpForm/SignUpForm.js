@@ -177,11 +177,7 @@ function SignUpForm (props) {
 
     const handleEnterSubmit = e => {
         if(e.key === "Enter"){
-            // console.log(seedData)
-            // const newData = seedData
-            // uploadEntries(newData)
             handleSubmit()
-            // updateCashOutEntries()
         } 
     } 
 
@@ -292,6 +288,36 @@ function SignUpForm (props) {
     }
 
 
+    const testTextMessages = async()=>{
+        const welcomeInfo = {name: "Ming Bell", phoneNumber: '12819258166', listNumber: '60', level: '2', user:'Fake Referral Code'}
+        await sendWelcomeSMS(welcomeInfo)
+        console.log('Sending Text Message to: ',welcomeInfo.name)
+    }
+
+
+
+    const correctLVL2ListNums = async () => {
+        let counter = 0
+
+        for(const member of seedData){
+            const userRef = await db().collection('users').where('name','==', member.name).get()
+            const entryRef = await db().collection('memberships').where('level','==',2).where('user','==', userRef.docs[0].id).get()
+            const docID = entryRef.docs[0]?.id
+
+            if(docID){
+                await db().collection('memberships').doc(docID).update( { listNumber: +member["#"] } )
+            }else{
+                const entry2Ref = await db().collection('memberships').where('level','==',2).where('user','==', userRef.docs[1].id).get()
+                const id = entry2Ref.docs[0]?.id
+                
+                await db().collection('memberships').doc(id).update( { listNumber: +member["#"] } )
+            }
+
+            counter += 1
+            console.log({counter})
+        }
+        console.log("COMPLETED")
+    }
 
 
 

@@ -107,7 +107,7 @@ function AdminPage(props) {
                 const numberQueryResults = {};
 
                 memberResults = numberQueries.filter(member => !numberQueryResults[member['memberShipID']] && (numberQueryResults[member['memberShipID']] = true) )
-    
+                
             }else{
                 // const query = inputFilter.toUpperCase()
                 const byName = copyofMembers.filter(member => member?.name?.toUpperCase()?.indexOf(query) > -1 )

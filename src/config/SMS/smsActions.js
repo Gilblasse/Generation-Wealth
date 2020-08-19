@@ -6,7 +6,7 @@ const baseURL = "https://generationalwealthsms.herokuapp.com/api/notifications/"
 
 
 export const sendWelcomeSMS = async ({name, phoneNumber, listNumber, level, user: referralCode})=>{
-    let welcomeMessages = [welcomeMessage(name), welcomeDetails(listNumber,level,referralCode)]
+    let welcomeMessages = [welcomeMessage(name), welcomeDetails(level,listNumber,referralCode)]
 
         const config = {
             method: 'POST',
