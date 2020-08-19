@@ -178,6 +178,7 @@ function SignUpForm (props) {
     const handleEnterSubmit = e => {
         if(e.key === "Enter"){
             handleSubmit()
+            // testTextMessages()
         } 
     } 
 
@@ -289,7 +290,7 @@ function SignUpForm (props) {
 
 
     const testTextMessages = async()=>{
-        const welcomeInfo = {name: "Ming Bell", phoneNumber: '12819258166', listNumber: '60', level: '2', user:'Fake Referral Code'}
+        const welcomeInfo = {name: "Ivery Test", phoneNumber: '18453800926', listNumber: '60', level: '2', user:'Fake Referral Code'}
         await sendWelcomeSMS(welcomeInfo)
         console.log('Sending Text Message to: ',welcomeInfo.name)
     }

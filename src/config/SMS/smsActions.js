@@ -1,7 +1,8 @@
 import {welcomeMessage, welcomeDetails, cashingOutSoonMessage, cashingOutMessage, messageForInvestors, skipMessage, wonAuctionMessage} from './smsMessages'
 
-
-const baseURL = "https://generationalwealthsms.herokuapp.com/api/notifications/"
+const production = "https://generationalwealthsms.herokuapp.com/api/notifications/"
+const development = "http://localhost:3001/api/notifications/"
+const baseURL = production
 
 
 
@@ -16,7 +17,8 @@ export const sendWelcomeSMS = async ({name, phoneNumber, listNumber, level, user
             body: JSON.stringify({ welcomeMessages, phoneNumber })
         }
 
-        fetch(`${baseURL}/welcome`, config)
+    const statusMessage = await fetch(`${baseURL}/welcome`, config)
+    debugger
 }
 
 

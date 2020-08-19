@@ -353,7 +353,7 @@ const useStyles = makeStyles((theme) => ({
 
 
 
-                   <Grid item className={classes.columnOdd} xs={6}>Checkout</Grid>
+                   <Grid item className={classes.columnOdd} xs={6}>Cash Out</Grid>
                    <Grid item className={classes.columnOdd} xs={6}> 
                         { 
                             editUser 
