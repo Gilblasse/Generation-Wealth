@@ -74,6 +74,7 @@ function AdminPage(props) {
             membersArr.push(memberInfo)
 
             setPercent(Math.floor((membersArr.length / total) * 100))
+            console.log('Percentage: ', Math.floor((membersArr.length / total) * 100))
         }
 
         console.log('Completed ', total)
