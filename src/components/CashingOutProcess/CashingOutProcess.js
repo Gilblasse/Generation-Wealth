@@ -87,14 +87,14 @@ function CashingOutProcess({selectedLvlMembers, allMembers, updateMember, select
         const cashingOut = selectedLvlMembers().slice(0,numOfCashOuts)
         const investorsArry = []
         const dict = {}
-      
-        let num = 1
+        const availableInvestors = selectedLvlMembers().filter(i => i.paidCashOutMember == false )
+        
+        let num = 0
         let sum;
        
         for (const mem in cashingOut){
           sum = num + 7
-          investorsArry.push(selectedLvlMembers().slice(356).slice(num, sum))
-      
+          investorsArry.push(availableInvestors.slice(num, sum))
           num = sum
         }
       
@@ -118,49 +118,54 @@ function CashingOutProcess({selectedLvlMembers, allMembers, updateMember, select
 
             if(associatedInvestors?.length === 7){
                 
-                if(adminFee && investment && cashOut){  
-                    const bottomListNumCurrentLVL = findBottomOfList(level)
-                    let newEntryCurrentLVL = {adminFee: false, investment: true, cashOut: false, listNumber: bottomListNumCurrentLVL, level , user, active: true, skipCount: 0}
-                    let remainingMemberInfo = {name,phoneNumber,cashApp,referralCode } //memberShipID
-                    let deactivateMemeber = {id: memberShipID}
-                    let newLvlListNum;
-                    let newBottomListNum;
-                   
-                    switch (level) {
-                        case 1:
-                            console.log('Hit 1')
-                            newBottomListNum = findBottomOfList(2)
-                            newLvlListNum = {...newEntryCurrentLVL, investment: false, listNumber: newBottomListNum, level: 2} 
-                            break;
-                        
-                        case 2:
-                            console.log('Hit 2')
-                            newBottomListNum = findBottomOfList(3)
-                            newLvlListNum = {...newEntryCurrentLVL, investment: false, listNumber: newBottomListNum, level: 3} 
-                            break;
-
-                        case 3:
-                            console.log('Hit 3')
-                            newBottomListNum = findBottomOfList(4)
-                            newLvlListNum = {...newEntryCurrentLVL, investment: false, listNumber: newBottomListNum, level: 4}
-                            break;
-
-                        case 4:
-                            console.log('Hit 4')
-                            newBottomListNum = findBottomOfList(1)
-                            newLvlListNum = {...newEntryCurrentLVL, investment: false, listNumber: newBottomListNum, level: 1} 
-                            break;
+                if(associatedInvestors.every(i => i.investment == true)){
                     
-                        default:
-                        break;
+                    if(adminFee && investment && cashOut){  
+                        const bottomListNumCurrentLVL = findBottomOfList(level)
+                        let newEntryCurrentLVL = {adminFee: false, investment: true, cashOut: false, listNumber: bottomListNumCurrentLVL, level , user, active: true, skipCount: 0}
+                        let remainingMemberInfo = {name,phoneNumber,cashApp,referralCode } //memberShipID
+                        let deactivateMemeber = {id: memberShipID}
+                        let newLvlListNum;
+                        let newBottomListNum;
+                       
+                        switch (level) {
+                            case 1:
+                                console.log('Hit 1')
+                                newBottomListNum = findBottomOfList(2)
+                                newLvlListNum = {...newEntryCurrentLVL, investment: false, listNumber: newBottomListNum, level: 2} 
+                                break;
+                            
+                            case 2:
+                                console.log('Hit 2')
+                                newBottomListNum = findBottomOfList(3)
+                                newLvlListNum = {...newEntryCurrentLVL, investment: false, listNumber: newBottomListNum, level: 3} 
+                                break;
+    
+                            case 3:
+                                console.log('Hit 3')
+                                newBottomListNum = findBottomOfList(4)
+                                newLvlListNum = {...newEntryCurrentLVL, investment: false, listNumber: newBottomListNum, level: 4}
+                                break;
+    
+                            case 4:
+                                console.log('Hit 4')
+                                newBottomListNum = findBottomOfList(1)
+                                newLvlListNum = {...newEntryCurrentLVL, investment: false, listNumber: newBottomListNum, level: 1} 
+                                break;
+                        
+                            default:
+                            break;
+                        }
+    
+                        cashoutUpdates.push({newEntryCurrentLVL, deactivateMemeber, newLvlListNum, remainingMemberInfo,associatedInvestors})
+    
+                    }else{
+                        // alert(`Entry:  ${cashingOutmember.listNumber}. ${cashingOutmember.name} is Missing Either Admin Fee | Investment | Checkout`)
                     }
-
-                    // await sendCashingOutSMS(remainingMemberInfo, [newEntryCurrentLVL, newLvlListNum])
-                    cashoutUpdates.push({newEntryCurrentLVL, deactivateMemeber, newLvlListNum, remainingMemberInfo})
-
                 }else{
-                    // alert(`Entry:  ${cashingOutmember.listNumber}. ${cashingOutmember.name} is Missing Either Admin Fee | Investment | Checkout`)
+                    alert('Please Make Sure All Investors Paid Their Investment')
                 }
+
             }else{
                 alert(`Entry:  ${cashingOutmember.listNumber}. ${cashingOutmember.name} Needs more Members In Order to Cash Out`)
             }

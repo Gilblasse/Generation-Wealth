@@ -178,10 +178,18 @@ function SignUpForm (props) {
     const handleEnterSubmit = e => {
         if(e.key === "Enter"){
             handleSubmit()
-            // testTextMessages()
         } 
     } 
 
+
+    const updateEntries = async () =>{
+        const entriesRef = await db().collection('memberships').where('level','==', 2).get()
+        for (const entryDoc of entriesRef.docs) {
+            db().collection('memberships').doc(entryDoc.id).update({paidCashOutMember: false})
+        }
+        
+        console.log('completed')
+    }
 
 
     const uploadEntries = async(newData)=>{

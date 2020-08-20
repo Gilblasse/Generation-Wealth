@@ -166,28 +166,45 @@ function AdminPage(props) {
 
    const cashingOutDB = async (arrOfEntries, reaminingMembers) => {
        let updatedEntries = []
+       let removeEntries = []
+       let assocs = []
        let count = 0 
 
        for(const entry of arrOfEntries){
-           const {deactivateMemeber: id, newEntryCurrentLVL, newLvlListNum, remainingMemberInfo } = entry
-            const membershipInfo = await db().collection('memberships').doc(id).update({active: false})
+           const {deactivateMemeber: id, newEntryCurrentLVL, newLvlListNum, remainingMemberInfo, associatedInvestors } = entry
+           const membershipInfo = await db().collection('memberships').doc(id).update({active: false})
 
-        //     // Retrive New Entry IDs HERE
+            const investorIds = associatedInvestors.map(i => i.memberShipID)
+            removeEntries.push(investorIds)
+
+            for(const investorId of investorIds ){
+                await db().collection('memberships').doc(investorId).update({paidCashOutMember: true})
+            }
+
+        // Retrive New Entry IDs HERE
            const oldLVLEntry = await db().collection('memberships').add(newEntryCurrentLVL)
            const newLVLEntry =  await db().collection('memberships').add(newLvlListNum)
            const oldLvlEntryDoc = await oldLVLEntry.get()
            const newLVLEntryDoc = await newLVLEntry.get()
            const oldData = oldLvlEntryDoc.data()
            const newData = newLVLEntryDoc.data()
-           
+
            const newEntryOldLVL = {memberShipID: oldLvlEntryDoc.id, ...oldData, ...remainingMemberInfo}
            const newEntryNewLVL = {memberShipID: newLVLEntryDoc.id, ...newData, ...remainingMemberInfo}
-        
-            updatedEntries.push(newEntryOldLVL,newEntryNewLVL)
+ 
+            updatedEntries.push(newEntryOldLVL,newEntryNewLVL,...associatedInvestors)
        }
+
+       for(const removeEntry of removeEntries){
+            reaminingMembers = reaminingMembers.filter(e => !removeEntry.includes(e.memberShipID))
+       }
+       
        setMembers([...reaminingMembers, ...updatedEntries])
    }
     
+
+
+
 
    const updateBulkEntries = async (bulkEntries) =>{
         for(const entry of bulkEntries){
@@ -223,12 +240,13 @@ function AdminPage(props) {
                 let count = 0
                 
                 payload.forEach( (memberUpdate, increment) => {
-                    let {deactivateMemeber, newEntryCurrentLVL, newLvlListNum, remainingMemberInfo} = memberUpdate
-                    newEntryCurrentLVL = {...newEntryCurrentLVL, listNumber: newEntryCurrentLVL.listNumber + increment}
-                    newLvlListNum = {...newLvlListNum, listNumber: newLvlListNum.listNumber + increment }
-                    
-                    cashingOutDBarr.push({deactivateMemeber: deactivateMemeber.id, newEntryCurrentLVL, newLvlListNum, remainingMemberInfo})
+                    let {deactivateMemeber, newEntryCurrentLVL, newLvlListNum, remainingMemberInfo, associatedInvestors} = memberUpdate
+                    newEntryCurrentLVL = {...newEntryCurrentLVL, listNumber: newEntryCurrentLVL.listNumber + increment, paidCashOutMember: false}
+                    newLvlListNum = {...newLvlListNum, listNumber: newLvlListNum.listNumber + increment , paidCashOutMember: false}
+                    associatedInvestors = associatedInvestors.map(i => ({...i, paidCashOutMember: true}) )
+                    cashingOutDBarr.push({deactivateMemeber: deactivateMemeber.id, newEntryCurrentLVL, newLvlListNum, remainingMemberInfo, associatedInvestors})
                 })
+
 
                 cashingOutDB(cashingOutDBarr, reaminingMembers)
             break;
