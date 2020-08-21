@@ -87,7 +87,7 @@ function QueryMembersList({allMembers, handleFilters, inputFilter, dropDownVal, 
         const {level, user, name,phoneNumber,cashApp,referralCode,memberShipID } = targetMember
         const skipedMemberUpdatedListNum = { listNumber: associatedMembers.splice(-1)[0].listNumber + 1 }
         const {listNumber} = skipMember
-        const userMembership = { level, listNumber, user, adminFee: false, cashOut: false, investment: false, active: true, skipCount: 0}
+        const userMembership = { level, listNumber, user, adminFee: false, cashOut: false, investment: false, active: true, skipCount: 0, paidCashOutMember: false}
         const remainingMemberInfo = {name,phoneNumber,cashApp,referralCode }
         // skipCount: skipMember.skipCount + 1
  

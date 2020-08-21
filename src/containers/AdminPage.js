@@ -63,7 +63,7 @@ function AdminPage(props) {
         const membersArr = []
         const membershipRef = await db().collection('memberships').get()
         const total = membershipRef.docs.length
-        console.log('Getting All Entries: ', total)
+        // console.log('Getting All Entries: ', total)
         
         for(const membershipDoc of membershipRef.docs){
             const membershipData = membershipDoc.data()
@@ -74,7 +74,7 @@ function AdminPage(props) {
             membersArr.push(memberInfo)
 
             setPercent(Math.floor((membersArr.length / total) * 100))
-            console.log('Percentage: ', Math.floor((membersArr.length / total) * 100))
+            // console.log('Percentage: ', Math.floor((membersArr.length / total) * 100))
         }
 
         console.log('Completed ', total)
