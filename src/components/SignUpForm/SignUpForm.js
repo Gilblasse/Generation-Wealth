@@ -156,7 +156,7 @@ function SignUpForm (props) {
                 const newUserInfo = await newUser.get()
             
                 const userID = newUser.id
-                const userMembership = { level: startingLevel, listNumber, adminFee, cashOut, investment, user: userID, active: true, skipCount: 0}
+                const userMembership = { level: startingLevel, listNumber, adminFee, cashOut, investment, user: userID, active: true, skipCount: 0, paidCashOutMember: false}
                 
                 const userInfo =  {...newUserInfo.data(), ...userMembership}
                 
@@ -231,10 +231,10 @@ function SignUpForm (props) {
                 const newUser = await db().collection('users').add({name, phoneNumber, cashApp, refBy, notes})
                 const newUserDocs = await newUser.get()
                 const userID = newUserDocs.id
-                await db().collection('memberships').add({listNumber, level: 1, adminFee, investment, cashOut, active: !cashOut, skipCount: 0, user: userID})
+                await db().collection('memberships').add({listNumber, level: 1, adminFee, investment, cashOut, active: !cashOut, skipCount: 0, user: userID, paidCashOutMember: false})
             }else{
                 const userid = isUser.docs[0].id
-                await db().collection('memberships').add({listNumber, level: 1, adminFee, investment, cashOut, active: !cashOut, skipCount: 0, user: userid })
+                await db().collection('memberships').add({listNumber, level: 1, adminFee, investment, cashOut, active: !cashOut, skipCount: 0, user: userid, paidCashOutMember: false })
             }
             console.log('Entries Completed: ', count)
             count += 1
@@ -281,8 +281,8 @@ function SignUpForm (props) {
 
         for(const doc of entryDocs){
             const user = doc.data().user
-            const levelOneData = {level: 1, listNumber: lvlOneCount, skipCount: 0, adminFee: false, investment: false, cashOut: false, active: true, user}
-            const levelTwoData = {level: 2, listNumber: lvlTwoCount, skipCount: 0, adminFee: false, investment: false, cashOut: false, active: true, user}
+            const levelOneData = {level: 1, listNumber: lvlOneCount, skipCount: 0, adminFee: false, investment: false, cashOut: false, active: true, user, paidCashOutMember: false}
+            const levelTwoData = {level: 2, listNumber: lvlTwoCount, skipCount: 0, adminFee: false, investment: false, cashOut: false, active: true, user, paidCashOutMember: false}
 
             await db().collection('memberships').add(levelOneData)
             await db().collection('memberships').add(levelTwoData)

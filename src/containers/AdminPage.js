@@ -74,11 +74,7 @@ function AdminPage(props) {
             membersArr.push(memberInfo)
 
             setPercent(Math.floor((membersArr.length / total) * 100))
-<<<<<<< HEAD
             // console.log('Percentage: ', Math.floor((membersArr.length / total) * 100))
-=======
-            // console.log('Percent: ', Math.floor((membersArr.length / total) * 100))
->>>>>>> f4d9c7a823fc164a905641c02d5fcc124ea31b70
         }
 
         // console.log('Completed ', total)
@@ -155,7 +151,7 @@ function AdminPage(props) {
     }
 
     const updateAndNewEntry = async ({update, newEntry, userInfo},updateMemObj, leftovers) => {
-        debugger
+        
         await db().collection('memberships').doc(update.id).update(update.data)
         const newMembershipEntry = await db().collection('memberships').add(newEntry)
 

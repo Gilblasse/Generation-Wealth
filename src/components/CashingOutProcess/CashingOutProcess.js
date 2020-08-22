@@ -122,7 +122,7 @@ function CashingOutProcess({selectedLvlMembers, allMembers, updateMember, select
                     
                     if(adminFee && investment && cashOut){  
                         const bottomListNumCurrentLVL = findBottomOfList(level)
-                        let newEntryCurrentLVL = {adminFee: false, investment: true, cashOut: false, listNumber: bottomListNumCurrentLVL, level , user, active: true, skipCount: 0}
+                        let newEntryCurrentLVL = {adminFee: false, investment: true, cashOut: false, listNumber: bottomListNumCurrentLVL, level , user, active: true, skipCount: 0, paidCashOutMember: false}
                         let remainingMemberInfo = {name,phoneNumber,cashApp,referralCode } //memberShipID
                         let deactivateMemeber = {id: memberShipID}
                         let newLvlListNum;

@@ -1,4 +1,4 @@
-export const SelectedMode = "development"
+export const SelectedMode = "production"
 
 export const Mode = {
     production:{
