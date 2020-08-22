@@ -1,9 +1,9 @@
 import {welcomeMessage, welcomeDetails, cashingOutSoonMessage, cashingOutMessage, messageForInvestors, skipMessage, wonAuctionMessage} from './smsMessages'
+import { Mode, SelectedMode } from '../mode'
 
-const production = "https://generationalwealthsms.herokuapp.com/api/notifications/"
-const development = "http://localhost:3001/api/notifications/"
-const baseURL = production
 
+
+const baseURL = Mode[SelectedMode].smsBaseUrl
 
 
 export const sendWelcomeSMS = async ({name, phoneNumber, listNumber, level, user: referralCode})=>{
