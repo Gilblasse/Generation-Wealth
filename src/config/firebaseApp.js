@@ -1,18 +1,10 @@
 import * as firebase from 'firebase/app'
 import 'firebase/firestore'
 import 'firebase/auth'
+import { Mode, SelectedMode } from './mode'
 
 
-const firebaseConfig = {
-    apiKey: "AIzaSyAimfOCOe6sQWV8icWmzZowq87nNj356zs",
-    authDomain: "generational-wealth.firebaseapp.com",
-    databaseURL: "https://generational-wealth.firebaseio.com",
-    projectId: "generational-wealth",
-    storageBucket: "generational-wealth.appspot.com",
-    messagingSenderId: "486967743800",
-    appId: "1:486967743800:web:ea8c080ede02f73cab1dcd",
-    measurementId: "G-LLDHD4RK1W"
-};
+const firebaseConfig = Mode[SelectedMode].firebaseConfig
 
 firebase.initializeApp(firebaseConfig);
 
