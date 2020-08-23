@@ -21,14 +21,15 @@ const typeDefs = gql`
         investment: Boolean!
         level: Int!
         listNumber: Int!
-        paidCashOutMember: Boolean!
+        paidCashOutMember: Boolean
         skipCount: Int!
         user: User!
     }
 
     type User {
+        id: ID
         name: String!
-        phoneNumber: Int!
+        phoneNumber: String!
         cashApp: String!
         referralCode: String!
         notes: String!
@@ -36,8 +37,13 @@ const typeDefs = gql`
     }
 
     type Query {
-        entries: [Memberships]
-        user(id: String): User
+        entries(level: Int, paid: Boolean): [Memberships]
+        user(id: String!): User
+    }
+
+    type Mutation {
+        newEntry(userId: String!): Memberships
+        deactivate(entryId: ID!): Memberships
     }
 `
 
@@ -77,8 +83,18 @@ const resolvers = {
 
 
     Query: {
-        async entries() {
-            const entires = await db.collection('memberships').get()
+        async entries(_,args) {
+            let entiresRef = db.collection('memberships').where("active","==",true)
+            
+            entiresRef =  args.level 
+            ? db.collection('memberships').where("level","==",args.level)
+            : entiresRef
+           
+            entiresRef = args.paid != undefined 
+            ? entiresRef.where("paidCashOutMember","==",args.paid) 
+            : entiresRef
+
+            const entires = await entiresRef.orderBy('listNumber', 'asc').get()
             return entires.docs.map(e => e.data())
         },
 
@@ -92,6 +108,26 @@ const resolvers = {
                 throw new ApolloError(`You did ${JSON.stringify(argsID.id)} Error: ${error}`)
            }
         }
+    },
+
+    Mutation: {
+        async newEntry(_, args){
+            const entryAdded = await db.collection('memberships').add({user: args.userId, level: 1, listNumber: 700})
+            try {
+               const entryRef = await entryAdded.get()
+              return entryRef.data()
+
+           } catch (error) {
+                throw new ApolloError(`newEntryAdded => ${JSON.stringify(entryAdded)} |  Error: ${error}`)
+           }
+            
+        },
+
+        async deactivate(_,args){
+            await db.collection('memberships').doc(args.entryId).update({active: false})
+        }
+
+
     }
     
 
