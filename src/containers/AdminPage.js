@@ -10,6 +10,10 @@ import ReferredCounts from '../components/ReferredCounts/ReferredCounts';
 import {Grid} from '@material-ui/core'
 import NavigationBar from './NavigationBar/NavigationBar';
 import './AdminPage.css'
+import { EntiresProvider } from '../Providers/Entries';
+import axios from 'axios'
+import {GRAPHQL_API, GET_USER_ENTRIES_QUERY} from '../graphQL/Constants'
+
 
 
 function AdminPage(props) {
@@ -24,7 +28,7 @@ function AdminPage(props) {
     const [applicationLoading, setApplicationLoading] = useState(true)
     const selectLevelRef = useRef()
     const isNumber = (n) => { return /^-?[\d.]+(?:e-?\d+)?$/.test(n); }
-
+    const [data, setData] = useState([])
 
 
 
@@ -56,15 +60,34 @@ function AdminPage(props) {
 
 
     useEffect(()=>{
+        // getData()
         getAllEntries()
     },[])
+
+    // useEffect(()=>{
+    //     console.log({data})
+    // },[data])
+
+
+
+    // const getData = async ()=> {
+    //     const userEntryQueryResults = await axios.post(
+    //         Constants.GRAPHQL_API, {
+    //             query: Constants.GET_USER_ENTRIES_QUERY,
+    //             variables: {level: 1}
+    //         }
+    //     )
+
+    //     const usersEntries = userEntryQueryResults.data.data.entries
+    //     setData(usersEntries)
+    // }
 
     const getAllEntries = async ()=>{
         const membersArr = []
         const membershipRef = await db().collection('memberships').get()
         const total = membershipRef.docs.length
-        // console.log('Getting All Entries: ', total)
-        
+        console.log('Getting All Entries: ', total)
+
         for(const membershipDoc of membershipRef.docs){
             const membershipData = membershipDoc.data()
             const userDoc = await db().collection('users').doc(membershipData.user).get()
@@ -73,22 +96,22 @@ function AdminPage(props) {
             
             membersArr.push(memberInfo)
 
-            setPercent(Math.floor((membersArr.length / total) * 100))
-            // console.log('Percentage: ', Math.floor((membersArr.length / total) * 100))
+            // setPercent(Math.floor((membersArr.length / total) * 100))
+            console.log('Percentage: ', Math.floor((membersArr.length / total) * 100))
         }
 
-        // console.log('Completed ', total)
-        setApplicationLoading(false)
+        console.log('Completed ', total)
+        // setApplicationLoading(false)
         setMembers(membersArr)
     }
 
   
 
-    // useEffect(() =>{
-    //     console.log('MEMBERS UPDATED SIZE => ', members.length)
-    //     console.log('MEMBERS UPDATED => ', members)
-    //     // selectedLvlMembers()
-    // },[members])
+    useEffect(() =>{
+        console.log('MEMBERS UPDATED SIZE => ', members.length)
+        console.log('MEMBERS UPDATED => ', members)
+        // selectedLvlMembers()
+    },[members])
    
 
 
@@ -324,62 +347,82 @@ function AdminPage(props) {
 
 
 
+    // useEffect(()=>{
+    //    console.log("Hello Members: ", members)
+    // },[members])
+
+    // useEffect(()=> {
+    //     console.log('Getting ALL Entires With Users')
+    //     getUserEntriesList()
+    // }, [])
+
+
+
+    const getUserEntriesList = async ()=> {
+        const query = {query: GET_USER_ENTRIES_QUERY, variables: {level: 1} }
+        const userEntryQueryResults = await axios.post(GRAPHQL_API, query)
+        const usersEntries = userEntryQueryResults.data.data.entries
+
+        setMembers(usersEntries)
+    }
 
     
 
     return (
-        <div className='admin'>
-            <NavigationBar/>
+        // <EntiresProvider>
+            <div className='admin'>
+                <NavigationBar/>
 
-            {/* <LoadingPageModal loading={applicationLoading} percent={percent}/> */}
-
-
-            <div style={{backgroundColor: '#f3f3f3'}}>
-                <Grid container spacing={2}>
-                
-                <Grid item xs={9}>
-                        <Grid container direction="column" spacing={3}>
-                            
-                            <Grid item xs={12}>
-                                <select onChange={(e)=> setDropDownVal(e.target.value)} ref={selectLevelRef} name="levels" >
-                                    <option value="1">Level 1</option>
-                                    <option value="2">Level 2</option>
-                                    <option value="3">Level 3</option>
-                                    <option value="4">Level 4</option>
-                                </select>
+                {/* <LoadingPageModal loading={applicationLoading} percent={percent}/> */}
 
 
-                                <CashingOutProcess allMembers={members} selectLevelRef={selectLevelRef} selectedLvlMembers={selectedLvlMembers()} updateMember={(memberAction) => updateMember(memberAction)}/>
+                <div style={{backgroundColor: '#f3f3f3'}}>
+                    <Grid container spacing={2}>
+                    
+                    <Grid item xs={9}>
+                            <Grid container direction="column" spacing={3}>
+                                
+                                <Grid item xs={12}>
+                                    <select onChange={(e)=> setDropDownVal(e.target.value)} ref={selectLevelRef} name="levels" >
+                                        <option value="1">Level 1</option>
+                                        <option value="2">Level 2</option>
+                                        <option value="3">Level 3</option>
+                                        <option value="4">Level 4</option>
+                                    </select>
+
+
+                                    <CashingOutProcess allMembers={members} selectLevelRef={selectLevelRef} selectedLvlMembers={selectedLvlMembers()} updateMember={(memberAction) => updateMember(memberAction)}/>
+                                </Grid>
+
+
+                                <Grid item xs={12}>
+                                    <QueryMembersList 
+                                        allMembers={members}  
+                                        handleFilters={handleFilters}
+                                        inputFilter={inputFilter}
+                                        dropDownVal={dropDownVal}
+                                        setInputFilter={setInputFilter}
+                                        // queryMembers={queryMembers} 
+                                        selectedLvlMembers={selectedLvlMembers()} 
+                                        updateMember={(memberAction) => updateMember(memberAction)} 
+                                    />
+                                </Grid>
+
                             </Grid>
-
-
-                            <Grid item xs={12}>
-                                <QueryMembersList 
-                                    allMembers={members}  
-                                    handleFilters={handleFilters}
-                                    inputFilter={inputFilter}
-                                    dropDownVal={dropDownVal}
-                                    setInputFilter={setInputFilter}
-                                    // queryMembers={queryMembers} 
-                                    selectedLvlMembers={selectedLvlMembers()} 
-                                    updateMember={(memberAction) => updateMember(memberAction)} 
-                                />
-                            </Grid>
-
-                        </Grid>
-                </Grid>
-                
-
+                    </Grid>
                     
 
-                    <Grid item xs={3}>
-                        <ReferredCounts members={members}/>
+                        
+
+                        <Grid item xs={3}>
+                            <ReferredCounts members={members}/>
+                        </Grid>
                     </Grid>
-                </Grid>
+                </div>
+
+
             </div>
-
-
-        </div>
+        // </EntiresProvider>
     );
 }
 

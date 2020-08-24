@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useContext} from 'react'
 import MemeberRow from '../components/MemberRow/MemeberRow'
 import ReactLoading from 'react-loading';
 import { Modal, Select, OutlinedInput, IconButton, InputAdornment, MenuItem, makeStyles, Card, CardContent, Grid } from '@material-ui/core';
 import { sendingSkipMessages } from '../config/SMS/smsActions';
 // import {db} from '../config/firebaseApp';
 import SearchIcon from '@material-ui/icons/Search';
+import { EntriesContext } from '../Providers/Entries'
 
 
 function rand() {
@@ -54,6 +55,7 @@ function getModalStyle() {
 
 // queryMembers,  selectedLvlMembers
 function QueryMembersList({allMembers, handleFilters, inputFilter, dropDownVal, updateMember, setInputFilter}) {
+
     const [expanded, setExpanded] = useState(false);
     const [queryMembers, setQueryMembers] = useState([]);
     const [openModal, setOpenModal] = useState(false)
@@ -287,12 +289,11 @@ function QueryMembersList({allMembers, handleFilters, inputFilter, dropDownVal, 
                                 {
                                     queryMembers.map((member,i) => {
                                         
-
                                         return (
                                             <MemeberRow 
                                                 key={i} 
                                                 allMembers={sortedAllMembers()} 
-                                                member={{...member, referredBy: getReferredBy(member)}} 
+                                                member={member} 
                                                 i={i} 
                                                 expanded={expanded} 
                                                 setExpanded={setExpanded} 

@@ -153,9 +153,11 @@ function SignUpForm (props) {
             if (startingLevel){
                 const listNumber = await getlistNumber()
                 const newUser = await db().collection('users').add({ name, phoneNumber, cashApp, referralCode })
+                const userID = newUser.id
+
+                db().collection('users').doc(userID).update({id: userID})
                 const newUserInfo = await newUser.get()
             
-                const userID = newUser.id
                 const userMembership = { level: startingLevel, listNumber, adminFee, cashOut, investment, user: userID, active: true, skipCount: 0, paidCashOutMember: false}
                 
                 const userInfo =  {...newUserInfo.data(), ...userMembership}

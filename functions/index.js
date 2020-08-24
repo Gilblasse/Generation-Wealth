@@ -20,7 +20,7 @@ const typeDefs = gql`
         cashOut: Boolean!
         investment: Boolean!
         level: Int!
-        listNumber: Int!
+        listNumber: Int
         paidCashOutMember: Boolean
         skipCount: Int!
         user: User!
@@ -31,13 +31,13 @@ const typeDefs = gql`
         name: String!
         phoneNumber: String!
         cashApp: String!
-        referralCode: String!
+        referralCode: User
         notes: String!
         entries: [Memberships]!
     }
 
     type Query {
-        entries(level: Int, paid: Boolean): [Memberships]
+        entries(level: Int, paid: Boolean, listNumber: Int, active: Boolean): [Memberships]
         user(id: String!): User
     }
 
@@ -65,6 +65,23 @@ const resolvers = {
             } catch (error) {
                 throw new ApolloError(`Resolvers USER: ${JSON.stringify(user)}  ERROR: ${error}`)
             }
+        },
+
+        async referralCode(user){
+            let entries;
+            try {
+                if(user.referralCode){
+                    const userEntries = await db.collection('users').where('id','==', user.referralCode).get()
+                    entries = userEntries.docs.map(e => e.data() )
+                    
+                    return entries[0]
+                } 
+            
+                return null
+
+            } catch (error) {
+                throw new ApolloError(`Resolvers USER: ${JSON.stringify(user)}  ERROR: ${error}`)
+            }
         }
     },
 
@@ -84,17 +101,28 @@ const resolvers = {
 
     Query: {
         async entries(_,args) {
+            let entires;
             let entiresRef = db.collection('memberships').where("active","==",true)
             
             entiresRef =  args.level 
             ? db.collection('memberships').where("level","==",args.level)
             : entiresRef
            
-            entiresRef = args.paid != undefined 
-            ? entiresRef.where("paidCashOutMember","==",args.paid) 
-            : entiresRef
+            if (args.listNumber){
+                entiresRef = entiresRef.where("listNumber","==",args.listNumber)
+                entires = await entiresRef.get()
+            }else{
+                entiresRef = args.paid !== undefined 
+                ? entiresRef.where("paidCashOutMember","==",args.paid) 
+                : entiresRef
 
-            const entires = await entiresRef.orderBy('listNumber', 'asc').get()
+                // entiresRef = args.active !== undefined 
+                // ? entiresRef.where("active","==",args.true) 
+                // : entiresRef
+
+                entires = await entiresRef.orderBy('listNumber', 'asc').get()
+            }
+
             return entires.docs.map(e => e.data())
         },
 
