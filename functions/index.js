@@ -32,7 +32,7 @@ const typeDefs = gql`
         phoneNumber: String!
         cashApp: String!
         referralCode: User
-        notes: String!
+        notes: String
         entries: [Memberships]!
     }
 
